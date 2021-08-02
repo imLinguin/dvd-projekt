@@ -1,7 +1,10 @@
+#!/usr/bin/env python3
+
 import logging
 import argparse
 from sys import platform
 from api.gog import GOGAPI
+from api.wine import WineHandler
 from utils.config import ConfigManager
 from utils.download_manager import DownloadManager
 
@@ -15,8 +18,7 @@ logger = logging.getLogger('MAIN')
 def main():
     config_manager = ConfigManager()
     api_handler = GOGAPI(config_manager=config_manager)
-    download_manager = DownloadManager(
-        config_manager=config_manager, api_handler=api_handler)
+    wine_handler = WineHandler(config_manager)
 
     parser = argparse.ArgumentParser(description='Native CLI GOG client')
     subparsers = parser.add_subparsers(dest='command', required=True)
@@ -45,18 +47,28 @@ def main():
     install_parser = subparsers.add_parser(
         'install', help='Downloads desired selected by game slug')
     install_parser.add_argument(
-        'slug', help='Slug of the game listed in list_games command')
+        'slug', help='Slug of the game listed in list-games command')
     install_parser.add_argument(
-        '--force-platform', '--platform', dest='platform', choices=['windows', 'mac', 'linux'])
-    install_parser.add_argument('--path', '-p', type=str)
-    install_parser.add_argument('--debug', action='store_true')
+        '--force_platform', '--platform', dest='platform', choices=['windows', 'mac', 'linux'])
+    install_parser.add_argument('--path', '-p', type=str, help='Specify path where to save game files')
+    install_parser.add_argument('--debug', action='store_true', help='Enables debug output')
+    install_parser.add_argument('--lang','-l', type=str, help='Specify language e.g. en-US | pl-PL | en-UK etc.')
+    
+    comp_parser = subparsers.add_parser('wine', help='Allows to change compatibility layers\' settings.') 
+    sub_comp_parsers = comp_parser.add_subparsers(dest='option', required=False)
+    sub_comp_parsers.add_parser('list')
+    sub_comp_parsers.add_parser('select').add_argument('setting', type=int)
+    sub_comp_parsers.add_parser('scan')
 
     args = parser.parse_args()
-    if args.debug:
-        logger.setLevel(logging.DEBUG)
-        api_handler.logger.setLevel(logging.DEBUG)
-        download_manager.logger.setLevel(logging.DEBUG)
-    logger.log(logging.DEBUG, args)
+    try:
+        if args.debug:
+            logger.setLevel(logging.DEBUG)
+            api_handler.logger.setLevel(logging.DEBUG)
+            download_manager.logger.setLevel(logging.DEBUG)
+        logger.log(logging.DEBUG, args)
+    except AttributeError: 
+        pass
     try:
         if args.command == 'auth':
             if args.option == 'login':
@@ -71,9 +83,23 @@ def main():
             else:
                 api_handler.show_library()
         elif args.command == 'install':
+            download_manager = DownloadManager(
+                    config_manager=config_manager, api_handler=api_handler)
             download_manager.init_download(args)
+        elif args.command == 'wine':
+            if args.option == 'list':
+                wine_handler.list_binaries()
+            elif args.option == 'scan':
+                wine_handler.find_binaries()
+            elif args.option == 'select':
+                args.setting = args.setting - 1
+                if args.setting < 0:
+                    args.setting = 0
+                wine_handler.select_default(args.setting)
     except KeyboardInterrupt:
+        pass
         logger.log(logging.WARN, 'Interupted by user exiting')
+        download_manager.stop_workers()
         exit()
 
 
