@@ -88,16 +88,17 @@ class DownloadManager():
             lang = 'en-US'
         self.lang = lang
         self.dl_path = path
-        if system == "Linux":
-            print("Linux downloads doesn't work for now")
-            return
+        if system == 'Linux':
+            print('Native Linux downloads might be broken now')
             # File which is being downloaded is a huge script which is an installer that also contains game data
             # TODO: Download script and handle it's execution maybe there is an optional argument for install path
             check = game['downloads'][0][1]['linux']
             if check:
+                path = os.path.join(path, check[0]['name'])
+                prepare_location(path, self.logger)
                 self.get_file(
-                    f'https://embed.gog.com{check[0]["manualUrl"]}', path, False)
-        elif system == "Windows":
+                    url=f'https://embed.gog.com{check[0]["manualUrl"]}', path=os.path.join(path, 'installer.sh'), item_progress=True)
+        elif system == 'Windows':
             self.logger.debug('Getting Build data')
             builds = self.get_json(
                 f'{_gog_content_system}products/{game["id"]}/os/windows/builds?generation=2')
@@ -202,17 +203,23 @@ class DownloadManager():
                 best = item
         return best
 
-    def get_file(self, url, path, compressed_sum='', decompressed_sum='', compressed=False):
-        response = self.api_handler.session.get(
-            url, stream=True, allow_redirects=True)
-        total = response.headers.get('Content-Length')
+    def get_file(self, url, path, compressed_sum='', decompressed_sum='', compressed=False, item_progress=False):
         with open(path, 'ab') as f:
+            response = self.api_handler.session.get(
+            url, stream=True, allow_redirects=True)
+            total = response.headers.get('Content-Length')
             if total is None:
                 f.write(response.content)
             else:
                 total = int(total)
+                downloaded = 0
                 for data in response.iter_content(chunk_size=max(int(total/1000), 1024*1024)):
+                    downloaded += len(data)
                     f.write(data)
+                    if item_progress:
+                        done = int(50*downloaded/total)
+                        sys.stdout.write('\r[{}{}]'.format('█' * done, '.' * (50-done)))
+                        sys.stdout.flush()
 
         if compressed:
             decompress_path = path.replace('.tmp', '')

@@ -151,6 +151,8 @@ class GOGAPI():
         if not self._get_new_token(code):
             self.logger.log(logging.ERROR, msg='Code is invalid')
             return False
+        else:
+            self.sync_library()
 
     def logout(self):
         self.config.logout_clean()

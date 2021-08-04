@@ -34,6 +34,8 @@ class WineHandler():
         output = '** WINE BINARIES\n'
         for x in range(len(binaries['versions'])):
             output+=f'* [{"X" if binaries["default"] == x else " "}] {x+1}. {binaries["versions"][x]["name"]} {binaries["versions"][x]["binary_path"]}\n'
+        if len(binaries['versions']) == 0:
+            output += 'List is empty, add binary manualy or use scanning feature'
         print(output)
     
     def select_default(self, index):
