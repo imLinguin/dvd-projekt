@@ -3,14 +3,15 @@ import webbrowser
 import logging
 import time
 import json
+import constants
+from multiprocessing import cpu_count
 
-
-_gog_auth_url = 'https://auth.gog.com/auth?client_id=46899977096215655&redirect_uri=https://embed.gog.com/on_login_success?origin=client&response_type=code&layout=client2'
-_gog_new_token_url = 'https://auth.gog.com/token?client_id=46899977096215655&client_secret=9d85c43b1482497dbbce61f6e4aa173a433796eeae2ca8c5f6129f2dc4de46d9&grant_type=authorization_code&redirect_uri=https://embed.gog.com/on_login_success?origin=client'
-_gog_refresh_token_url = 'https://auth.gog.com/token?client_id=46899977096215655&client_secret=9d85c43b1482497dbbce61f6e4aa173a433796eeae2ca8c5f6129f2dc4de46d9&grant_type=refresh_token'
-_gog_user_data_url = 'https://embed.gog.com/userData.json'
-_gog_library_url = 'https://embed.gog.com/account/getFilteredProducts?'
-_gog_item_data_url = 'https://embed.gog.com/account/gameDetails/'
+_gog_auth_url = f'{constants.GOG_AUTH}/auth?client_id=46899977096215655&redirect_uri={constants.GOG_EMBED}/on_login_success?origin=client&response_type=code&layout=client2'
+_gog_new_token_url = f'{constants.GOG_AUTH}/token?client_id=46899977096215655&client_secret=9d85c43b1482497dbbce61f6e4aa173a433796eeae2ca8c5f6129f2dc4de46d9&grant_type=authorization_code&redirect_uri=https://embed.gog.com/on_login_success?origin=client'
+_gog_refresh_token_url = f'{constants.GOG_AUTH}/token?client_id=46899977096215655&client_secret=9d85c43b1482497dbbce61f6e4aa173a433796eeae2ca8c5f6129f2dc4de46d9&grant_type=refresh_token'
+_gog_user_data_url = f'{constants.GOG_EMBED}/userData.json'
+_gog_library_url = f'{constants.GOG_EMBED}/account/getFilteredProducts?'
+_gog_item_data_url = f'{constants.GOG_EMBED}/account/gameDetails/'
 
 
 class GOGAPI():
@@ -18,6 +19,8 @@ class GOGAPI():
         self.config = config_manager
         self.logger = logging.getLogger('API')
         self.session = requests.sessions.Session()
+        adapter = requests.adapters.HTTPAdapter(pool_maxsize=cpu_count())
+        self.session.mount("https://", adapter)
         self.auth_status = self.get_auth_status()
         self._refresh_session()
 
@@ -37,19 +40,17 @@ class GOGAPI():
     def _refresh_token(self):
         token = self.config.get('user', 'refresh_token')
         if token:
-            self.logger.log(logging.INFO, msg='Trying to refresh token')
+            self.logger.info('Trying to refresh token')
             response = self.session.get(
                 f'{_gog_refresh_token_url}&refresh_token={token}')
             if response.ok:
-                self.logger.log(
-                    logging.INFO, msg='Token successfully refreshed')
+                self.logger.info('Token successfully refreshed')
                 self._save_to_config(response)
                 self._refresh_session()
                 self.get_user_data()
                 return True
             else:
-                self.logger.log(
-                    logging.ERROR, msg='Error refreshing token, try authenticating again')
+                self.logger.error('Error refreshing token, try authenticating again')
                 return False
 
     def _get_new_token(self, code: str):
@@ -58,7 +59,7 @@ class GOGAPI():
         response = self.session.get(_gog_new_token_url+f'&code={code}')
         if not response.ok:
             return False
-        self.logger.log(logging.INFO, msg='Authentication successful')
+        self.logger.info('Authentication successful')
         self._save_to_config(response)
         self._refresh_session()
         self.get_user_data()
@@ -78,7 +79,7 @@ class GOGAPI():
         if self.is_expired():
             self._refresh_token()
         if not self.auth_status:
-            self.logger.log(logging.ERROR, 'You are not logged in')
+            self.logger.error('You are not logged in')
             return
         args = 'mediaType=1&hiddenFlag=0&sortBy=title'
         response = self.session.get(_gog_library_url+args, headers={
@@ -86,10 +87,9 @@ class GOGAPI():
         self.logger.log(logging.DEBUG, response)
         if response.ok:
             self.config.save('library', response.json()['products'])
-            self.logger.log(logging.INFO, 'Library refreshed')
+            self.logger.info( 'Library refreshed')
         else:
-            self.logger.log(
-                logging.ERROR, f'Error syncing library, response for debuging: {response.text}')
+            self.logger.error(f'Error syncing library, response for debuging: \n{response.text}')
 
     def show_library(self):
         array = self.config.read('library')
@@ -123,47 +123,45 @@ class GOGAPI():
         if found:
             return found
         else:
-            self.logger.log(logging.ERROR, 'Invalid slug')
+            self.logger.error('Invalid slug')
             return None
 
     def get_item_data(self, id):
-        if not id:
-            self.logger.log(logging.DEBUG, 'in get_item_data, no id provided')
-            return
         if self.is_expired():
             if not self._refresh_token():
                 return
         url = _gog_item_data_url+f'{id}.json'
         response = self.session.get(url, headers={
             'Authorization': f'Bearer {self.config.get("user", "access_token")}'})
-        self.logger.log(logging.DEBUG, url)
+        self.logger.debug(url)
         if response.ok:
             return response.json()
 
     def login(self, code: str = None):
         if not code:
-            self.logger.log(
-                logging.INFO, msg='No code passed, opening browser for manual input')
+            self.logger.info('No code passed, opening browser for manual input')
             webbrowser.open(_gog_auth_url)
             code = input('Provide code seen in URL: ')
             if not code:
                 return False
         if not self._get_new_token(code):
-            self.logger.log(logging.ERROR, msg='Code is invalid')
+            self.logger.error('Code is invalid')
             return False
         else:
             self.sync_library()
 
     def logout(self):
-        self.config.logout_clean()
-        self.logger.log(logging.INFO, 'Successfuly logged out')
+        if self.config.logout_clean():
+            self.logger.info('Successfuly logged out')
+        else:
+            self.logger.error('Something went wrong')
 
     def show_user(self):
         username = self.config.get('user', 'username')
         avatar = self.config.get('user', 'avatar')
 
-        self.logger.log(
-            logging.INFO, f'Showcase of user information\nUsername: {username}\nAutentication status: {"expired" if self.is_expired() else "valid"}\nAvatarURL: {avatar}.png')
+        self.logger.info(
+            f'Showcase of user information\nUsername: {username}\nAutentication status: {"expired" if self.is_expired() else "valid"}\nAvatarURL: {avatar}.png')
 
     def get_auth_status(self):
         return self.config.get('user', 'access_token') is not None

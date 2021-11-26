@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
-
 import logging
 import argparse
 from sys import platform
 from api.gog import GOGAPI
 from api.wine import WineHandler
 from utils.config import ConfigManager
-from utils.download_manager import DownloadManager
+from utils.launcher import Launcher
+from download.manager import DownloadManager
+
 
 logging.basicConfig(
     format='[%(name)s] %(levelname)s: %(message)s',
@@ -14,11 +15,12 @@ logging.basicConfig(
 )
 logger = logging.getLogger('MAIN')
 
-
 def main():
     config_manager = ConfigManager()
     api_handler = GOGAPI(config_manager=config_manager)
     wine_handler = WineHandler(config_manager)
+    download_manager = DownloadManager(
+        config_manager=config_manager, api_handler=api_handler)
 
     parser = argparse.ArgumentParser(description='Native CLI GOG client')
     subparsers = parser.add_subparsers(dest='command', required=True)
@@ -50,15 +52,28 @@ def main():
         'slug', help='Slug of the game listed in list-games command')
     install_parser.add_argument(
         '--force_platform', '--platform', dest='platform', choices=['windows', 'mac', 'linux'])
-    install_parser.add_argument('--path', '-p', type=str, help='Specify path where to save game files')
-    install_parser.add_argument('--debug', action='store_true', help='Enables debug output')
-    install_parser.add_argument('--lang','-l', type=str, help='Specify language e.g. en-US | pl-PL | en-UK etc.')
-    
-    comp_parser = subparsers.add_parser('wine', help='Allows to change compatibility layers\' settings.') 
-    sub_comp_parsers = comp_parser.add_subparsers(dest='option', required=False)
+    install_parser.add_argument(
+        '--path', '-p', type=str, help='Specify path where to save game files')
+    install_parser.add_argument(
+        '--debug', action='store_true', help='Enables debug output')
+    install_parser.add_argument(
+        '--lang', '-l', type=str, help='Specify language e.g. en-US | pl-PL | en-UK etc.')
+
+    comp_parser = subparsers.add_parser(
+        'wine', help='Allows to change compatibility layers\' settings.')
+    sub_comp_parsers = comp_parser.add_subparsers(
+        dest='option', required=False)
     sub_comp_parsers.add_parser('list')
     sub_comp_parsers.add_parser('select').add_argument('setting', type=int)
     sub_comp_parsers.add_parser('scan')
+
+    launch_parser = subparsers.add_parser('launch', help='Play specified game')
+    launch_parser.add_argument(
+        'slug', help='Slug of the game listed in list-games command')
+    launch_parser.add_argument(
+        '--prefix', type=str, help='Specify path for wine/proton prefix, default:$HOME/.wine')
+    launch_parser.add_argument(
+        '--gamemode', action='store_true', help='Enables gamemode when running exe file')
 
     args = parser.parse_args()
     try:
@@ -66,8 +81,9 @@ def main():
             logger.setLevel(logging.DEBUG)
             api_handler.logger.setLevel(logging.DEBUG)
             download_manager.logger.setLevel(logging.DEBUG)
+            wine_handler.logger.setLevel(logging.DEBUG)
         logger.log(logging.DEBUG, args)
-    except AttributeError: 
+    except AttributeError:
         pass
     try:
         if args.command == 'auth':
@@ -83,9 +99,9 @@ def main():
             else:
                 api_handler.show_library()
         elif args.command == 'install':
-            download_manager = DownloadManager(
-                    config_manager=config_manager, api_handler=api_handler)
-            download_manager.init_download(args)
+            download_manager.download(args)
+        elif args.command == 'uninstall':
+            print('TODO: Uninstalling')
         elif args.command == 'wine':
             if args.option == 'list':
                 wine_handler.list_binaries()
@@ -96,10 +112,17 @@ def main():
                 if args.setting < 0:
                     args.setting = 0
                 wine_handler.select_default(args.setting)
+        elif args.command == 'launch':
+            if not args.slug:
+                logger.error('Specify a valid game slug')
+                return
+            launcher = Launcher(config_manager, wine_handler)
+            launcher.start(args)
+
     except KeyboardInterrupt:
         pass
-        logger.log(logging.WARN, 'Interupted by user exiting')
-        download_manager.stop_workers()
+        logger.log(logging.WARN, 'Interupted by user. Exiting. Please Wait')
+        download_manager.cancel()
         exit()
 
 

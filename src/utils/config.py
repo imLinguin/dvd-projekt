@@ -2,15 +2,15 @@ import json
 import os
 from sys import platform
 from api.wine import WineBinary
+import constants
 
 
 class ConfigManager():
     def __init__(self):
-        self.path = '.'
-        self._get_path()
+        self.path = constants.CONFIG_PATH
 
     def _check_store(self, store):
-        path = os.path.join(self.path, f'{store}.json') 
+        path = os.path.join(self.path, f'{store}.json')
         if not os.path.isfile(path):
             f = open(path, 'w')
             f.write('{}')
@@ -66,18 +66,13 @@ class ConfigManager():
             return None
 
     def logout_clean(self):
-        with open(os.path.join(self.path, 'user.json'), 'w') as f:
-            f.write('')
-            f.close()
-        with open(os.path.join(self.path, 'library.json'), 'w') as f:
-            f.write('')
-            f.close()
-
-    def _get_path(self):
-        if platform == 'linux':
-            self.path = os.path.join(
-                os.getenv("HOME"), '.config', 'dvdprojektTUX')
-
-        # Make sure folder exists
-        if not os.path.isdir(self.path):
-            os.makedirs(self.path)
+        try:
+            with open(os.path.join(self.path, 'user.json'), 'w') as f:
+                f.write('')
+                f.close()
+            with open(os.path.join(self.path, 'library.json'), 'w') as f:
+                f.write('')
+                f.close()
+        except:
+            return False
+        return True

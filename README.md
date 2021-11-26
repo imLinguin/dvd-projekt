@@ -8,7 +8,7 @@ Script isn't ready yet. I'm actively working on it.
 
 ## Features
 - [x] Download native Windows titles (TODO: multithreaded downloading)
-- [ ] Play native Windows titles through Wine/Proton
+- [x] Play native Windows titles through Wine/Proton
 - [ ] Download native Linux installers from GOG
 - [ ] Keep games updated
 - [ ] Download DLCs
