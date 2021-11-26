@@ -32,7 +32,8 @@ class Launcher():
         binary_path: str = self.wine.get_binary_path()
         prefix_path = args.prefix or DEFAULT_PREFIX_PATH
         prefix_path.replace(" ", "\ ")
-        os.makedirs(prefix_path)
+        if not os.path.exists(prefix_path):
+            os.makedirs(prefix_path)
         if binary_path.find('proton'):
             command = f'{"gamemoderun" if gamemode == True else ""} STEAM_COMPAT_CLIENT_INSTALL_PATH=$HOME/.steam STEAM_COMPAT_DATA_PATH="{prefix_path}" "{binary_path}" run "{exe_path}" {task["arguments"]}'
         else:
