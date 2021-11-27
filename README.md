@@ -15,7 +15,12 @@ Script isn't ready yet. I'm actively working on it.
 - [ ] Manage downloaded games
 
 ## Running
-Script isn't ready for distributing yet, however if you really want to try it out you should clone the repo (`git clone https://github.com/imLinguin/dvd-projekt` or Download the ZIP) and just run the `src/main.py` file.
+Script isn't ready for distributing yet, however if you really want to try it out you should clone the repo 
+`git clone https://github.com/imLinguin/dvd-projekt` or <b>Download a ZIP</b>, and just run the `src/main.py` file.
+
+#### Downloading a ZIP source code:
+![obraz](https://user-images.githubusercontent.com/62100117/143685728-7db6f212-b560-44f4-be8a-6e1bb014ddf9.png)
+
 
 ## Positional arguments:
 - auth - Manage authentication
