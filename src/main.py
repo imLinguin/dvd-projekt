@@ -76,8 +76,9 @@ def main():
         '--gamemode', action='store_true', help='Enables gamemode when running exe file')
 
     args = parser.parse_args()
+    yaml_config = config_manager.read_config_yaml()
     try:
-        if args.debug:
+        if (yaml_config and yaml_config['global']['debug'] == True) or args.debug == True:
             logger.setLevel(logging.DEBUG)
             api_handler.logger.setLevel(logging.DEBUG)
             download_manager.logger.setLevel(logging.DEBUG)

@@ -14,9 +14,32 @@ class Launcher():
 
     def start(self, args):
         slug = args.slug
-        gamemode = args.gamemode
-        prefix = args.prefix
+        gamemode = False
+        prefix = ''
+        envvars = ''
+        try:
+            config = self.config.read_config_yaml()
+            if config:
+                game_specific_config = config[slug]
 
+                if config.get('global'):
+                    if config['global'].get('gamemode'):
+                        gamemode = config.get('global').get('gamemode')
+                    if config['global'].get('prefix'):
+                        prefix = config['global'].get('prefix')
+                if game_specific_config:
+                    if game_specific_config.get('gamemode'):
+                        gamemode = game_specific_config.get('gamemode')
+                    if game_specific_config.get('prefix'):
+                        prefix = game_specific_config.get('prefix')
+                    if game_specific_config.get('envvars'):
+                        envvars = game_specific_config.get('envvars')
+        except KeyError:
+            pass
+        if args.gamemode:
+            gamemode = args.gamemode
+        if args.prefix:
+            prefix = args.prefix
         games_array = self.config.read('installed')
         found = None
         for game in games_array:
@@ -25,21 +48,21 @@ class Launcher():
                 break
         if found is None:
             self.logger.error('Game with specified slug isn\'t installed')
-            return
         game_data = self.load_game_info(found)
         task = self.get_task(game_data['playTasks'])
         exe_path = os.path.join(found['path'], task['path'])
         binary_path: str = self.wine.get_binary_path()
-        prefix_path = args.prefix or DEFAULT_PREFIX_PATH
+        prefix_path = prefix or DEFAULT_PREFIX_PATH
         prefix_path.replace(" ", "\ ")
         if not os.path.exists(prefix_path):
             os.makedirs(prefix_path)
         if binary_path.find('proton'):
-            command = f'{"gamemoderun" if gamemode == True else ""} STEAM_COMPAT_CLIENT_INSTALL_PATH=$HOME/.steam STEAM_COMPAT_DATA_PATH="{prefix_path}" "{binary_path}" run "{exe_path}" {task["arguments"]}'
+            command = f'{"gamemoderun" if gamemode == True else ""} {envvars} STEAM_COMPAT_CLIENT_INSTALL_PATH=$HOME/.steam STEAM_COMPAT_DATA_PATH="{prefix_path}" "{binary_path}" run "{exe_path}" {task["arguments"]}'
         else:
-            command = f'{"gamemoderun" if gamemode == True else ""} WINEPREFIX="{prefix_path}" "{binary_path}" "{exe_path}" {task["arguments"]}'
+            command = f'{"gamemoderun" if gamemode == True else ""} {envvars} WINEPREFIX="{prefix_path}" "{binary_path}" "{exe_path}" {task["arguments"]}'
         command = command.strip()
-        print(command)
+        print("Issuing command\n", command)
+        return
         subprocess.run(command, shell='/bin/sh', cwd=found['path'])
 
     def load_game_info(self, game):

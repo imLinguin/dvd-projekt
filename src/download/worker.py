@@ -43,13 +43,14 @@ class DLWorker(Thread):
         self.completed = True
 
     def decompress_file(self, compressed, decompressed):
-        file = open(compressed, 'rb')
-        dc = zlib.decompress(file.read(), 15)
-        f = open(decompressed, 'ab')
-        f.write(dc)
-        f.close()
-        file.close()
-        os.remove(compressed)
+        if os.path.exists(compressed):
+            file = open(compressed, 'rb')
+            dc = zlib.decompress(file.read(), 15)
+            f = open(decompressed, 'ab')
+            f.write(dc)
+            f.close()
+            file.close()
+            os.remove(compressed)
 
     def get_file(self, url, path, compressed_sum='', decompressed_sum='', index=0):
         with open(path, 'ab') as f:
@@ -64,10 +65,12 @@ class DLWorker(Thread):
                     f.write(data)
 
             f.close()
-            if hashlib.md5(open(path, 'rb').read()).hexdigest() != compressed_sum:
+            isExisting = os.path.exists(path)
+            if not isExisting or hashlib.md5(open(path, 'rb').read()).hexdigest() != compressed_sum:
                 self.logger.warning(
                     f'Checksums dismatch for compressed chunk of {path}')
-                os.remove(path)
+                if isExisting:
+                    os.remove(path)
                 self.get_file(url, path, compressed_sum,
                               decompressed_sum, index)
                 return

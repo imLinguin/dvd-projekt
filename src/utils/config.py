@@ -1,4 +1,5 @@
 import json
+import yaml
 import os
 from sys import platform
 from api.wine import WineBinary
@@ -76,3 +77,12 @@ class ConfigManager():
         except:
             return False
         return True
+
+    def read_config_yaml(self):
+        yaml_path = os.path.join(self.path, 'config.yaml')
+        if(os.path.exists(yaml_path)):
+            config = yaml.load(open(yaml_path,'r'), yaml.Loader)
+            return config
+        else:
+            file = open(yaml_path, 'w')
+            yaml.dump({"global": {"gamemode":False}}, file)

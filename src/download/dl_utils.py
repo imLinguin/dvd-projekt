@@ -19,7 +19,7 @@ def get_zlib_encoded(api_handler, url):
 
 def prepare_location(path, logger):
     if not os.path.isdir(path):
-        os.makedirs(path)
+        os.makedirs(path, exist_ok=True)
         if logger:
             logger.debug(f'Created directory {path}')
 
