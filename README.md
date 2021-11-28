@@ -40,13 +40,22 @@ You can specify config for each game differently or globally
 ```yaml
 global: # global config
   gamemode: true #
-  debug: true #Enables debug level of logging
-  lang: 'pl-PL'
+  debug: true # Enables debug level of logging
+  lang: 'pl-PL' # Language that will be preffered to be downloaded for games
   prefix: '/home/linguin/Games/dvdProjekt/prefix' # Prefix location
+  wine_paths: # Additional paths where to search for wine and proton
+    - /path/to/proton/directory
+    - /path/to/wine/directory
+    - /path/to/second/wine/directory
 
 ghostrunner: # slug of the game
   envvars: 'PROTON_ENABLE_NVAPI=1 VKD3D_CONFIG=dxr' # Enviroment variables to be passed when launching the game
   prefix: '/home/linguin/Games/dvdProjekt/ghost_runner_prefix' # Prefix for that game only
 ```
+
+By default dvdprojekt searches for proton and wine in these directories:
+- `$HOME/.steam/steam/steamapps/common/`,
+- `$HOME/.steam/root/compatibilitytools.d/`,
+- `$HOME/.local/share/lutris/runners/wine/`
 
 ### Made in Poland 🇵🇱

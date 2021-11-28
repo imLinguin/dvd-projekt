@@ -1,9 +1,6 @@
 import logging
 import os
 
-_search_paths = ['$HOME/.steam/steam/steamapps/common/',
-                 '$HOME/.steam/root/compatibilitytools.d/',
-                 '$HOME/.local/share/lutris/runners/wine/']
 _home_dir = os.getenv('HOME')
 _config_store = 'wine_binaries'
 
@@ -12,10 +9,16 @@ class WineHandler():
     def __init__(self, config_manager):
         self.config = config_manager
         self.logger = logging.getLogger('COMPATIBILITY')
-
+        self.search_paths = ['$HOME/.steam/steam/steamapps/common/',
+                              '$HOME/.steam/root/compatibilitytools.d/',
+                              '$HOME/.local/share/lutris/runners/wine/']
     def find_binaries(self):
         found_versions = []
-        for path in _search_paths:
+        yaml_cfg = self.config.read_config_yaml()
+        user_paths = yaml_cfg.get('global').get('wine_paths')
+        if user_paths:
+            self.search_paths = self.search_paths + user_paths
+        for path in self.search_paths:
             path = path.replace('$HOME', _home_dir)
             if os.path.isdir(path):
                 potential_versions = os.listdir(path)
