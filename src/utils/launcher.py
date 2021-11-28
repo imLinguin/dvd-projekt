@@ -62,7 +62,6 @@ class Launcher():
             command = f'{"gamemoderun" if gamemode == True else ""} {envvars} WINEPREFIX="{prefix_path}" "{binary_path}" "{exe_path}" {task["arguments"]}'
         command = command.strip()
         print("Issuing command\n", command)
-        return
         subprocess.run(command, shell='/bin/sh', cwd=found['path'])
 
     def load_game_info(self, game):
