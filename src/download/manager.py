@@ -115,6 +115,8 @@ class DownloadManager():
             self.progress.downloaded = self.progress.total - len(download_files)
             self.progress.active_threads = len(self.active_threads)
             if(len(self.active_threads) < allowed_threads) and not self.cancelled:
+                if(len(download_files)<1):
+                    break
                 data = download_files.pop()
                 thread = DLWorker(data, self.dl_path, self.api_handler, self.game['id'])
                 # thread.logger.setLevel(self.logger.level)
