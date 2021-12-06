@@ -78,7 +78,7 @@ def main():
     args = parser.parse_args()
     yaml_config = config_manager.read_config_yaml()
     try:
-        if (yaml_config and yaml_config['global']['debug'] == True) or args.debug == True:
+        if (yaml_config and yaml_config.get('global').get('debug') == True) or args.debug == True:
             logger.setLevel(logging.DEBUG)
             api_handler.logger.setLevel(logging.DEBUG)
             download_manager.logger.setLevel(logging.DEBUG)

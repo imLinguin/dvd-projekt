@@ -9,3 +9,5 @@ DEFAULT_GAMES_PATH = os.path.join(os.getenv('HOME'), 'Games', 'dvdProjekt')
 DEFAULT_PREFIX_PATH = os.path.join(os.getenv('HOME'), '.wine')
 CONFIG_PATH = os.path.join(os.getenv('XDG_CONFIG_HOME'), '.config', 'dvdProjekt') if os.getenv(
     'XDG_CONFIG_HOME') is not None else os.path.join(os.getenv("HOME"), '.config', 'dvdProjekt')
+
+GALAXY_CDNS = ["edgecast", "high_winds", "gog_cdn"]

@@ -9,6 +9,8 @@ import constants
 class ConfigManager():
     def __init__(self):
         self.path = constants.CONFIG_PATH
+        if not os.path.exists(self.path):
+            os.makedirs(self.path)
 
     def _check_store(self, store):
         path = os.path.join(self.path, f'{store}.json')

@@ -30,7 +30,7 @@ class DownloadManager():
         if not installed_games:
             installed_games = []
         gameobj = {'slug': self.game['slug'],
-                   'title': self.game['title'], 'path': self.dl_path, 'id': self.game['id']}
+                   'title': self.game['title'], 'path': self.dl_path, 'id': self.game['id'], 'date_published': self.builds['items'][0]['date_published']}
         added = False
         for igame in range(len(installed_games)):
             if installed_games[igame]['slug'] == gameobj['slug']:
@@ -42,7 +42,6 @@ class DownloadManager():
         self.logger.info('Download complete')
 
     def download(self, args):
-
         if self.get_download_metadata(args):
             if self.perform_download():
                 self.finish()
@@ -70,9 +69,6 @@ class DownloadManager():
         # Builds data
         self.builds = dl_utils.get_json(
             self.api_handler, f'{constants.GOG_CONTENT_SYSTEM}/products/{game["id"]}/os/windows/builds?generation=2')
-        file = open("builds", 'w')
-        file.write(json.dumps(self.builds))
-        file.close()
         # Just in case
         if self.builds['count'] == 0:
             self.logger.error('Nothing to download, exiting')
@@ -80,9 +76,6 @@ class DownloadManager():
         meta_url = self.builds['items'][0]['link']
         self.logger.debug('Getting Meta data')
         self.meta = dl_utils.get_zlib_encoded(self.api_handler, meta_url)
-        file = open("meta", 'w')
-        file.write(json.dumps(self.meta))
-        file.close()
         self.game = game
         self.dependencies = self.meta.get('dependencies')
         self.dl_path = os.path.join(
@@ -122,8 +115,6 @@ class DownloadManager():
             self.progress.downloaded = self.progress.total - len(download_files)
             self.progress.active_threads = len(self.active_threads)
             if(len(self.active_threads) < allowed_threads) and not self.cancelled:
-                if(len(download_files)<1):
-                    break
                 data = download_files.pop()
                 thread = DLWorker(data, self.dl_path, self.api_handler, self.game['id'])
                 # thread.logger.setLevel(self.logger.level)

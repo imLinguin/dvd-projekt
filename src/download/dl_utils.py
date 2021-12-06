@@ -1,6 +1,7 @@
 import json
 import zlib
 import os
+import constants
 
 def get_json(api_handler, url):
     x = api_handler.session.get(url)
@@ -54,12 +55,27 @@ def parent_dir(path: str):
 
 
 def classify_cdns(array):
-    best = None
+    cdns = list()
     for item in array:
-        if best is None:
-            best = item
-            continue
-        # I'm not sure about that, research needed
-        if item['priority'] < best['priority']:
-            best = item
+        score = 0
+        endpoint_name = item['endpoint_name']
+        # Some CDNS are failing to process a request propertly
+        cdn = filterCdns(endpoint_name, constants.GALAXY_CDNS)
+        if cdn:
+            cdns.append(item)
+    best = None
+    for cdn in cdns:
+        if not best:
+            best = cdn
+        else:
+            if best['priority'] > cdn['priority']:
+                best = cdn
+    
     return best
+
+        
+def filterCdns(string,  options):
+    for option in options:
+        if string == option:
+            return True
+    return False

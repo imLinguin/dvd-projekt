@@ -56,10 +56,13 @@ class Launcher():
         prefix_path.replace(" ", "\ ")
         if not os.path.exists(prefix_path):
             os.makedirs(prefix_path)
-        if binary_path.find('proton'):
-            command = f'{"gamemoderun" if gamemode == True else ""} {envvars} STEAM_COMPAT_CLIENT_INSTALL_PATH=$HOME/.steam STEAM_COMPAT_DATA_PATH="{prefix_path}" "{binary_path}" run "{exe_path}" {task["arguments"]}'
+        task_arguments = ""
+        if task.get("arguments"):
+            task_arguments = task['arguments']
+        if binary_path.find('proton') > 0:
+            command = f'{"gamemoderun" if gamemode == True else ""} {envvars} STEAM_COMPAT_CLIENT_INSTALL_PATH=$HOME/.steam STEAM_COMPAT_DATA_PATH="{prefix_path}" "{binary_path}" run "{exe_path}" {task_arguments}'
         else:
-            command = f'{"gamemoderun" if gamemode == True else ""} {envvars} WINEPREFIX="{prefix_path}" "{binary_path}" "{exe_path}" {task["arguments"]}'
+            command = f'{"gamemoderun" if gamemode == True else ""} {envvars} WINEPREFIX="{prefix_path}" "{binary_path}" "{exe_path}" {task_arguments}'
         command = command.strip()
         print("Issuing command\n", command)
         subprocess.run(command, shell='/bin/sh', cwd=found['path'])
@@ -74,6 +77,8 @@ class Launcher():
             return json.loads(data)
 
     def get_task(self, tasks: list):
+        if(len(tasks) == 1):
+            return tasks[0]
         prompt = "Choose a task:\n"
         for task in range(len(tasks)):
             prompt += f'{task+1}. {tasks[task]["name"]}\n'
