@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 import logging
 import argparse
+import json
 from sys import platform
 from api.gog import GOGAPI
 from api.wine import WineHandler
 from utils.config import ConfigManager
 from utils.launcher import Launcher
 from download.manager import DownloadManager
-
 
 logging.basicConfig(
     format='[%(name)s] %(levelname)s: %(message)s',
@@ -74,6 +74,11 @@ def main():
         '--prefix', type=str, help='Specify path for wine/proton prefix, default:$HOME/.wine')
     launch_parser.add_argument(
         '--gamemode', action='store_true', help='Enables gamemode when running exe file')
+    info_parser = subparsers.add_parser(
+        "info", help="Get info about specified game")
+    info_parser.add_argument("--debug", action='store_true', help="Enables Debug console logging")
+    info_parser.add_argument("--json", action="store_true", help="Returns json formated data")
+    info_parser.add_argument("slug", help='Slug of the game listed in list-games command')
 
     args = parser.parse_args()
     yaml_config = config_manager.read_config_yaml()
@@ -83,6 +88,11 @@ def main():
             api_handler.logger.setLevel(logging.DEBUG)
             download_manager.logger.setLevel(logging.DEBUG)
             wine_handler.logger.setLevel(logging.DEBUG)
+        if args.json:
+            logger.setLevel(logging.NOTSET)
+            api_handler.logger.setLevel(logging.NOTSET)
+            download_manager.logger.setLevel(logging.NOTSET)
+            wine_handler.logger.setLevel(logging.NOTSET)
         logger.log(logging.DEBUG, args)
     except AttributeError:
         pass
@@ -119,7 +129,20 @@ def main():
                 return
             launcher = Launcher(config_manager, wine_handler)
             launcher.start(args)
-
+        elif args.command == 'info':
+            if not args.slug:
+                logger.error('Specify a valid game slug')
+                return
+            found_game = api_handler.find_game(query=args.slug, key='slug')
+            if not found_game:
+                return
+            data = api_handler.get_item_data(found_game['id'])
+            
+            if args.json:
+                print(json.dumps(data))
+            else:
+                print(f"*******\nTITLE: {data['title']}\nFORUM: {data['forumLink']}\nFEATURES: {json.dumps(data['features'])}\nCHANGELOG: {data['changelog']}\n*******")
+            
     except KeyboardInterrupt:
         pass
         logger.log(logging.WARN, 'Interupted by user. Exiting. Please Wait')

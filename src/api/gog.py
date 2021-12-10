@@ -32,7 +32,7 @@ class GOGAPI():
 
     def _refresh_session(self):
         self.session.headers = {
-            'Authorization': f'Bearer {self.config.get("user", "access_token")}', 'User-Agent': 'dvdProjekt Linux client https://github.com/imLinguin/dvdProjekt'}
+            'Authorization': f'Bearer {self.config.get("user", "access_token")}'}
 
     def is_expired(self):
         return self.auth_status and self.config.get('user', 'expire_time') < time.time()

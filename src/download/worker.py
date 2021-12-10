@@ -20,6 +20,9 @@ class DLWorker(Thread):
 
     def do_stuff(self):
         item_path = os.path.join(self.path, self.data.path)
+        if os.path.exists(item_path) and self.data.sha256 and (dl_utils.calculatesha256_sum(item_path) != self.data.sha256):
+            self.completed = True
+            return
         for index in range(len(self.data.chunks)):
             chunk = self.data.chunks[index]
             if self.cancelled:
@@ -39,7 +42,6 @@ class DLWorker(Thread):
         for index in range(len(self.data.chunks)):
             path = os.path.join(self.path, self.data.path)
             self.decompress_file(path+f'.tmp{index}', path)
-
         self.completed = True
 
     def decompress_file(self, compressed, decompressed):
@@ -53,6 +55,9 @@ class DLWorker(Thread):
             os.remove(compressed)
 
     def get_file(self, url, path, compressed_sum='', decompressed_sum='', index=0):
+        isExisting = os.path.exists(path)
+        if isExisting:
+            os.remove(path)
         with open(path, 'ab') as f:
             response = self.api_handler.session.get(
                 url, stream=True, allow_redirects=True)
@@ -63,10 +68,9 @@ class DLWorker(Thread):
                 total = int(total)
                 for data in response.iter_content(chunk_size=max(int(total/1000), 1024*1024)):
                     f.write(data)
-
             f.close()
             isExisting = os.path.exists(path)
-            if not isExisting or hashlib.md5(open(path, 'rb').read()).hexdigest() != compressed_sum:
+            if isExisting and (hashlib.md5(open(path, 'rb').read()).hexdigest() != compressed_sum):
                 self.logger.warning(
                     f'Checksums dismatch for compressed chunk of {path}')
                 if isExisting:

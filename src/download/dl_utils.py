@@ -2,6 +2,7 @@ import json
 import zlib
 import os
 import constants
+import hashlib
 
 def get_json(api_handler, url):
     x = api_handler.session.get(url)
@@ -78,4 +79,15 @@ def filterCdns(string,  options):
     for option in options:
         if string == option:
             return True
-    return False
+    return False 
+
+def calculatesha256_sum(path):
+    with open(path, 'rb') as f:
+        sha256 = hashlib.sha256()
+        while True:
+            chunk = f.read(16 * 1024)
+            if not chunk:
+                break
+            sha256.update(chunk)
+
+        return sha256.hexdigest()

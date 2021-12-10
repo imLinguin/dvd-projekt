@@ -88,3 +88,9 @@ class ConfigManager():
         else:
             file = open(yaml_path, 'w')
             yaml.dump({"global": {"gamemode":False}}, file)
+            file.close()
+
+    def write_config_yaml(self, data):
+        yaml_path = os.path.join(self.path, 'config.yaml')
+        if(os.path.exists(yaml_path)):
+            config = yaml.dump(data, open(yaml_path, 'w'))

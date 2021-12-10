@@ -56,11 +56,6 @@ class DownloadManager():
             self.logger.error('Couldn\'t find what you are looking for')
             return
         self.logger.info(f'Found matching game {args.slug}')
-        if not args.path:
-            self.dl_path = constants.DEFAULT_GAMES_PATH
-        else:
-            self.logger.info(f'Custom path provided {args.path}')
-            self.dl_path = args.path
         # Getting more and newer data
         self.dl_target = self.api_handler.get_item_data(game['id'])
         self.dl_target['id'] = game['id']
@@ -78,8 +73,15 @@ class DownloadManager():
         self.meta = dl_utils.get_zlib_encoded(self.api_handler, meta_url)
         self.game = game
         self.dependencies = self.meta.get('dependencies')
-        self.dl_path = os.path.join(
-            self.dl_path, self.meta['installDirectory'])
+        if not args.path:
+            self.dl_path = constants.DEFAULT_GAMES_PATH
+            self.dl_path = os.path.join(
+                self.dl_path, self.meta['installDirectory'])
+        else:
+            self.logger.info(f'Custom path provided {args.path}')
+            self.dl_path = args.path
+        # TODO: Handle Dependencies
+
         return True
 
     def perform_download(self):
@@ -87,9 +89,8 @@ class DownloadManager():
         self.logger.debug("Collecting base game depots")
         collected_depots = []
         for depot in self.meta['depots']:
-            if str(depot['productId']) == str(self.dl_target['id']):
-                # TODO: Respect user language
-                collected_depots.append(objects.Depot('en-US', depot))
+            # TODO: Respect user language
+            collected_depots.append(objects.Depot('en-US', depot))
         self.logger.debug(
             f"Collected {len(collected_depots)} depots, proceeding to download")
 
