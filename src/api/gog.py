@@ -71,6 +71,7 @@ class GOGAPI():
 
         if response.ok:
             data = response.json()
+            print(data)
             self.config.set_data('user', 'username', data['username'])
             self.config.set_data('user', 'avatar', data['avatar'])
             return True
@@ -81,15 +82,19 @@ class GOGAPI():
         if not self.auth_status:
             self.logger.error('You are not logged in')
             return
-        args = 'mediaType=1&hiddenFlag=0&sortBy=title'
-        response = self.session.get(_gog_library_url+args, headers={
-            'Authorization': f'Bearer {self.config.get("user", "access_token")}'})
-        self.logger.log(logging.DEBUG, response)
-        if response.ok:
-            self.config.save('library', response.json()['products'])
+        args_games = 'mediaType=1&hiddenFlag=0&sortBy=title&totalPages=1'
+        args_movies = 'mediaType=2&hiddenFlag=0&sortBy=title&totalPages=1'
+
+        response_games = self.session.get(_gog_library_url+args_games)
+        response_movies = self.session.get(_gog_library_url+args_movies)
+        self.logger.debug(response_movies.json()['products'])
+        if response_games.ok:
+            if response_movies.ok:
+                self.config.save('movies', response_movies.json()['products'])
+            self.config.save('library', response_games.json()['products'])
             self.logger.info( 'Library refreshed')
         else:
-            self.logger.error(f'Error syncing library, response for debuging: \n{response.text}')
+            self.logger.error(f'Error syncing library, response for debuging: \n{response_games.text}')
 
     def show_library(self):
         array = self.config.read('library')

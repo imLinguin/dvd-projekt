@@ -57,7 +57,7 @@ def main():
     install_parser.add_argument(
         '--debug', action='store_true', help='Enables debug output')
     install_parser.add_argument(
-        '--lang', '-l', type=str, help='Specify language e.g. en-US | pl-PL | en-UK etc.')
+        '--lang', '-l', type=str, help='Specify language e.g. en-US | pl-PL etc.')
 
     comp_parser = subparsers.add_parser(
         'wine', help='Allows to change compatibility layers\' settings.')

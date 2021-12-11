@@ -46,7 +46,7 @@ You can specify config for each game differently or globally
 global: # global config
   gamemode: true #
   debug: true # Enables debug level of logging
-  lang: 'pl-PL' # Language that will be preffered to be downloaded for games
+  lang: 'pl' # Language that will be preffered to be downloaded for games alongside with en
   prefix: '/home/linguin/Games/dvdProjekt/prefix' # Prefix location
   wine_paths: # Additional paths where to search for wine and proton
     - /path/to/proton/directory

@@ -7,7 +7,7 @@ import requests
 import threading
 from time import sleep
 from multiprocessing import cpu_count
-from download import dl_utils, objects
+from download import dl_utils, objects, movie
 from download.worker import DLWorker
 from download.progressbar import ProgressBar
 from sys import platform
@@ -25,6 +25,7 @@ class DownloadManager():
     def cancel(self):
         self.cancelled = True
 
+    # Saves data about installed game in config
     def finish(self):
         installed_games = self.config.read('installed')
         if not installed_games:
@@ -56,10 +57,20 @@ class DownloadManager():
             self.logger.error('Couldn\'t find what you are looking for')
             return
         self.logger.info(f'Found matching game {args.slug}')
+        if not args.path:
+            self.dl_path = constants.DEFAULT_GAMES_PATH
+        else:
+            self.logger.info(f'Custom path provided {args.path}')
+            self.dl_path = args.path
+
         # Getting more and newer data
         self.dl_target = self.api_handler.get_item_data(game['id'])
         self.dl_target['id'] = game['id']
         self.dl_target['slug'] = game['slug']
+        # If target is a movie handle it separately
+        if game['isMovie']:
+            movie.download_movie(game, self.api_handler)
+            return False
         self.logger.debug('Getting Build data')
         # Builds data
         self.builds = dl_utils.get_json(
@@ -89,8 +100,10 @@ class DownloadManager():
         self.logger.debug("Collecting base game depots")
         collected_depots = []
         for depot in self.meta['depots']:
-            # TODO: Respect user language
-            collected_depots.append(objects.Depot('en-US', depot))
+            if str(depot['productId']) == str(self.dl_target['id']):
+                # TODO: Respect user language
+                newObject = objects.Depot(self.lang, depot)
+                collected_depots.append()
         self.logger.debug(
             f"Collected {len(collected_depots)} depots, proceeding to download")
 
