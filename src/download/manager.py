@@ -94,7 +94,13 @@ class DownloadManager():
         # TODO: Handle Dependencies
 
         return True
-
+    def update_progress_bar(self):
+        for thread in range(len(self.active_threads)):
+            if thread < len(self.active_threads):
+                if self.active_threads[thread].completed:
+                    self.active_threads.pop(thread)
+        if self.progress:
+            self.progress.active_threads = len(self.active_threads)
     def perform_download(self):
         # print(self.meta)
         self.logger.debug("Collecting base game depots")
@@ -103,7 +109,7 @@ class DownloadManager():
             if str(depot['productId']) == str(self.dl_target['id']):
                 # TODO: Respect user language
                 newObject = objects.Depot(self.lang, depot)
-                collected_depots.append()
+                collected_depots.append(newObject)
         self.logger.debug(
             f"Collected {len(collected_depots)} depots, proceeding to download")
 
@@ -121,18 +127,17 @@ class DownloadManager():
         self.progress = ProgressBar(0, len(download_files), 50)
         self.progress.start()
         while True:
-            for thread in range(len(self.active_threads)):
-                if thread < len(self.active_threads):
-                    self.active_threads[thread].cancelled = self.cancelled
-                    if self.active_threads[thread].completed:
-                        self.active_threads.pop(thread)
+            if self.cancelled:
+                for thread in range(len(self.active_threads)):
+                    if thread < len(self.active_threads):
+                        self.active_threads[thread].cancelled = self.cancelled
             self.progress.downloaded = self.progress.total - len(download_files)
             self.progress.active_threads = len(self.active_threads)
             if(len(self.active_threads) < allowed_threads) and not self.cancelled:
                 if(len(download_files)<1):
                     break
                 data = download_files.pop()
-                thread = DLWorker(data, self.dl_path, self.api_handler, self.game['id'])
+                thread = DLWorker(data, self.dl_path, self.api_handler, self.game['id'], self.update_progress_bar)
                 # thread.logger.setLevel(self.logger.level)
                 self.active_threads.append(thread)
                 thread.start()
@@ -140,6 +145,8 @@ class DownloadManager():
                 sleep(0.1)
                 if self.cancelled and len(self.active_threads) < 1:
                     break
+        for th in self.active_threads:
+            th.join()
         self.progress.downloaded = self.progress.total - len(download_files)
         self.progress.active_threads = len(self.active_threads)
         self.progress.completed = True

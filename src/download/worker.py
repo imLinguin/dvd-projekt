@@ -8,11 +8,12 @@ import os
 
 
 class DLWorker(Thread):
-    def __init__(self, data, path, api_handler, gameId):
+    def __init__(self, data, path, api_handler, gameId, progress):
         self.data = data
         self.path = path
         self.api_handler = api_handler
         self.gameId = gameId
+        self.progress = progress
         self.completed = False
         self.logger = logging.getLogger("WORKER")
         self.cancelled = False
@@ -23,15 +24,14 @@ class DLWorker(Thread):
         if os.path.exists(item_path) and self.data.sha256 and (dl_utils.calculatesha256_sum(item_path) != self.data.sha256):
             self.completed = True
             return
+        if os.path.exists(item_path):
+            os.remove(item_path)
         for index in range(len(self.data.chunks)):
             chunk = self.data.chunks[index]
             if self.cancelled:
                 break
             compressed_md5 = chunk['compressedMd5']
             md5 = chunk['md5']
-            if os.path.isfile(item_path):
-                if hashlib.md5(open(item_path, 'rb').read()).hexdigest() == md5:
-                    continue
             url = dl_utils.get_secure_link(
                 self.api_handler, dl_utils.galaxy_path(compressed_md5), self.gameId)
             download_path = os.path.join(
@@ -43,6 +43,7 @@ class DLWorker(Thread):
             path = os.path.join(self.path, self.data.path)
             self.decompress_file(path+f'.tmp{index}', path)
         self.completed = True
+        self.progress()
 
     def decompress_file(self, compressed, decompressed):
         if os.path.exists(compressed):
