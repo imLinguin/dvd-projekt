@@ -71,7 +71,6 @@ class GOGAPI():
 
         if response.ok:
             data = response.json()
-            print(data)
             self.config.set_data('user', 'username', data['username'])
             self.config.set_data('user', 'avatar', data['avatar'])
             return True
@@ -96,17 +95,22 @@ class GOGAPI():
         else:
             self.logger.error(f'Error syncing library, response for debuging: \n{response_games.text}')
 
-    def show_library(self):
-        array = self.config.read('library')
-        total = len(array)
-
-        for game in array:
+    def show_library(self, args):
+        games = self.config.read('library')
+        movies = self.config.read('movies')
+        games_total = len(games)
+        movies_total = len(movies)
+        if args.json:
+            data = json.dumps({"games":games, "movies":movies})
+            print(data)
+            return
+        print("* GAMES *")
+        for game in games:
             title = game['title']
             windows_support = game['worksOn']['Windows']
             macos_support = game['worksOn']["Mac"]
             linux_support = game['worksOn']["Linux"]
             slug = game['slug']
-            media_type = 'movie' if game['isMovie'] else 'game'
             platforms = []
             if linux_support:
                 platforms.append('Linux')
@@ -115,8 +119,14 @@ class GOGAPI():
             if windows_support:
                 platforms.append('Windows')
             print(
-                f'* [{title}] slug:{slug} support:{",".join(platforms)} type:{media_type}')
-        print(f'** Total: {total} **')
+                f'* [{title}] slug:{slug} support:{",".join(platforms)}')
+        print("\n* MOVIES *")
+        for movie in movies:
+            title = movie['title']
+            slug = movie['slug']
+            print(f'* [{title}] slug:{slug}')
+        print(f'** Total Games: {games_total} **')
+        print(f'** Total Movies: {games_total} **')
 
     def find_game(self, query: str, key: str):
         items: list = self.config.read('library')

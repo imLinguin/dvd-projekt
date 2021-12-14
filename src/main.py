@@ -44,6 +44,7 @@ def main():
         '--os', type=str, choices=['windows', 'macos', 'linux'])
     game_list.add_argument('--sync', action='store_true',
                            help='Forces library update')
+    game_list.add_argument('--json', action='store_true', help='Prints response as JSON')
     game_list.add_argument('--debug', action='store_true')
 
     install_parser = subparsers.add_parser(
@@ -108,7 +109,7 @@ def main():
             if args.sync:
                 api_handler.sync_library()
             else:
-                api_handler.show_library()
+                api_handler.show_library(args)
         elif args.command == 'install':
             download_manager.download(args)
         elif args.command == 'uninstall':
