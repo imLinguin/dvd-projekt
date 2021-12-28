@@ -2,6 +2,7 @@ import json
 import logging
 import os
 import subprocess
+from sys import platform
 from constants import DEFAULT_PREFIX_PATH
 
 
@@ -61,11 +62,28 @@ class Launcher():
         if task.get("arguments"):
             task_arguments = task['arguments']
 
-        if binary_path.find('proton') > 0:
-            command = f'{"gamemoderun" if gamemode == True else ""} {envvars} STEAM_COMPAT_CLIENT_INSTALL_PATH=$HOME/.steam STEAM_COMPAT_DATA_PATH="{prefix_path}" "{binary_path}" run "{exe_path}" {task_arguments}'
-        else:
-            command = f'{"gamemoderun" if gamemode == True else ""} {envvars} WINEPREFIX="{prefix_path}" "{binary_path}" "{exe_path}" {task_arguments}'
-        
+        if platform == 'linux':
+            if found['platform'] == 'windows':
+                if binary_path.find('proton') > 0:
+                    command = f'{"gamemoderun" if gamemode == True else ""} {envvars} STEAM_COMPAT_CLIENT_INSTALL_PATH=$HOME/.steam/steam STEAM_COMPAT_DATA_PATH="{prefix_path}" "{binary_path}" run "{exe_path}" {task_arguments}'
+                else:
+                    command = f'{"gamemoderun" if gamemode == True else ""} {envvars} WINEPREFIX="{prefix_path}" "{binary_path}" "{exe_path}" {task_arguments}'
+            elif found['platform'] == 'osx':
+                self.unsupported_platform()
+
+        elif platform == 'darwin':
+            if found['platform'] == 'darwin':
+                command = f'{envvars} {exe_path} {task_arguments}'
+            else:
+                self.unsupported_platform()
+
+        elif platform == 'win32':
+            if found['platform'] == 'win32':
+                command = f'{envvars} {exe_path} {task_arguments}'
+            else:
+                self.unsupported_platform()
+
+            
         command = command.strip()
         print("Issuing command\n", command)
 
@@ -75,7 +93,7 @@ class Launcher():
 
     def load_game_info(self, game):
         filename = f'goggame-{game["id"]}.info'
-        abs_path = os.path.join(game['path'], filename)
+        abs_path = os.path.join(game['path'], filename) if platform != "darwin" else os.path.join(game['path', 'Contents', 'Resources', filename])
         self.logger.info(f'Loading game info from {abs_path}')
         if not os.path.isfile(abs_path):
             self.logger.error('File does not exist. Exiting...')
@@ -97,8 +115,13 @@ class Launcher():
             return playable_tasks[0]
         for task in range(len(playable_tasks)):
             prompt += f'{task+1}. {playable_tasks[task]["name"]}\n'
-        
+            
+        count = len(playable_tasks)
         choice = input(prompt)
-        if not (int(choice)-1 < count and int(choice)-1 > 0):
+        if not (int(choice)-1 < count and int(choice)-1 >= 0):
             return self.get_task(tasks)
         return tasks[int(choice)-1]
+
+    def unsupported_platform(self):
+        self.logger.error('Unsupported platform!')
+        exit(1)

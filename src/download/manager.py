@@ -39,7 +39,7 @@ class DownloadManager():
         if not installed_games:
             installed_games = []
         gameobj = {'slug': self.game['slug'],
-                   'title': self.game['title'], 'path': self.dl_path, 'id': self.game['id'], 'date_published': self.builds['items'][0]['date_published']}
+                   'title': self.game['title'], 'path': self.dl_path, 'id': self.game['id'], 'build_id': self.builds['items'][0]['build_id'], 'platform': self.platform}
         added = False
         for igame in range(len(installed_games)):
             if installed_games[igame]['slug'] == gameobj['slug']:
