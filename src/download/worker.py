@@ -7,19 +7,17 @@ import logging
 import os
 
 
-class DLWorker(Thread):
-    def __init__(self, data, path, api_handler, gameId, progress):
+class DLWorker():
+    def __init__(self, data, path, api_handler, gameId):
         self.data = data
         self.path = path
         self.api_handler = api_handler
         self.gameId = gameId
-        self.progress = progress
         self.completed = False
-        self.logger = logging.getLogger("WORKER")
+        self.logger = logging.getLogger("DOWNLOAD_WORKER")
         self.cancelled = False
-        super().__init__(target=self.do_stuff)
-
-    def do_stuff(self):
+        
+    def do_stuff(self, is_dependency=False):
         item_path = os.path.join(self.path, self.data.path)
         if os.path.exists(item_path) and self.data.sha256 and (dl_utils.calculatesha256_sum(item_path) != self.data.sha256):
             self.completed = True
@@ -32,8 +30,10 @@ class DLWorker(Thread):
                 break
             compressed_md5 = chunk['compressedMd5']
             md5 = chunk['md5']
-            url = dl_utils.get_secure_link(
-                self.api_handler, dl_utils.galaxy_path(compressed_md5), self.gameId)
+            if is_dependency:
+                url = dl_utils.get_dependency_link(self.api_handler, dl_utils.galaxy_path(compressed_md5))
+            else:
+                url = dl_utils.get_secure_link(self.api_handler, dl_utils.galaxy_path(compressed_md5), self.gameId)
             download_path = os.path.join(
                 self.path, self.data.path+f'.tmp{index}')
             dl_utils.prepare_location(
@@ -43,7 +43,6 @@ class DLWorker(Thread):
             path = os.path.join(self.path, self.data.path)
             self.decompress_file(path+f'.tmp{index}', path)
         self.completed = True
-        self.progress()
 
     def decompress_file(self, compressed, decompressed):
         if os.path.exists(compressed):
@@ -78,4 +77,3 @@ class DLWorker(Thread):
                     os.remove(path)
                 self.get_file(url, path, compressed_sum,
                               decompressed_sum, index)
-                return

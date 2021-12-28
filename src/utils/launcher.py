@@ -50,6 +50,7 @@ class Launcher():
             self.logger.error('Game with specified slug isn\'t installed')
         game_data = self.load_game_info(found)
         task = self.get_task(game_data['playTasks'])
+        task_path = task['path'].replace("\\\\","/")
         exe_path = os.path.join(found['path'], task['path'])
         binary_path: str = self.wine.get_binary_path()
         prefix_path = prefix or DEFAULT_PREFIX_PATH
@@ -59,30 +60,45 @@ class Launcher():
         task_arguments = ""
         if task.get("arguments"):
             task_arguments = task['arguments']
+
         if binary_path.find('proton') > 0:
             command = f'{"gamemoderun" if gamemode == True else ""} {envvars} STEAM_COMPAT_CLIENT_INSTALL_PATH=$HOME/.steam STEAM_COMPAT_DATA_PATH="{prefix_path}" "{binary_path}" run "{exe_path}" {task_arguments}'
         else:
             command = f'{"gamemoderun" if gamemode == True else ""} {envvars} WINEPREFIX="{prefix_path}" "{binary_path}" "{exe_path}" {task_arguments}'
+        
         command = command.strip()
         print("Issuing command\n", command)
-        subprocess.run(command, shell='/bin/sh', cwd=found['path'])
+
+        process = subprocess.run(command, shell=True, cwd=found['path'])
+
+        exit(process.returncode)
 
     def load_game_info(self, game):
         filename = f'goggame-{game["id"]}.info'
         abs_path = os.path.join(game['path'], filename)
-        self.logger.info(f'Loading gameinfo {filename} file')
+        self.logger.info(f'Loading game info from {abs_path}')
+        if not os.path.isfile(abs_path):
+            self.logger.error('File does not exist. Exiting...')
+            exit(1)
         with open(abs_path) as f:
             data = f.read()
             f.close()
             return json.loads(data)
 
     def get_task(self, tasks: list):
-        if(len(tasks) == 1):
-            return tasks[0]
+        
         prompt = "Choose a task:\n"
+        count = 0
+        playable_tasks = []
         for task in range(len(tasks)):
-            prompt += f'{task+1}. {tasks[task]["name"]}\n'
+            if tasks[task]["category"] == "game" or tasks[task]["category"] == "launcher":
+                playable_tasks.append(tasks[task])
+        if(len(playable_tasks) == 1):
+            return playable_tasks[0]
+        for task in range(len(playable_tasks)):
+            prompt += f'{task+1}. {playable_tasks[task]["name"]}\n'
+        
         choice = input(prompt)
-        if not (int(choice)-1 < len(tasks) and int(choice)-1 > 0):
+        if not (int(choice)-1 < count and int(choice)-1 > 0):
             return self.get_task(tasks)
         return tasks[int(choice)-1]

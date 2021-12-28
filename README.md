@@ -3,15 +3,23 @@
 </p>
 
 ## DISCLAIMER
-Script isn't ready yet. I'm actively working on it.
+Script isn't fully operational yet. I'm actively working on it.
 
+## TODO LIST
+- make sure dependencies doesn't require parameters
+- support native Linux installers
+- Handle languages for V1 depots
+- Handle MacOS games launching
 
 ## Features
 - [x] Download native Windows titles (TODO: multithreaded downloading)
 - [x] Play native Windows titles through Wine/Proton
+- [x] Download movies through client
+- [ ] Support for Mac/OSX native games
 - [ ] Download native Linux installers from GOG
 - [ ] Keep games updated
-- [ ] Download DLCs
+- [x] Download DLCs
+- [ ] Manage DLCs / is it really needed?
 - [ ] Manage downloaded games
 
 ## Running

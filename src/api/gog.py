@@ -4,6 +4,7 @@ import logging
 import time
 import json
 import constants
+from download.dl_utils import get_zlib_encoded
 from multiprocessing import cpu_count
 
 _gog_auth_url = f'{constants.GOG_AUTH}/auth?client_id=46899977096215655&redirect_uri={constants.GOG_EMBED}/on_login_success?origin=client&response_type=code&layout=client2'
@@ -86,11 +87,13 @@ class GOGAPI():
 
         response_games = self.session.get(_gog_library_url+args_games)
         response_movies = self.session.get(_gog_library_url+args_movies)
-        self.logger.debug(response_movies.json()['products'])
         if response_games.ok:
+            games_json = response_games.json()
             if response_movies.ok:
-                self.config.save('movies', response_movies.json()['products'])
-            self.config.save('library', response_games.json()['products'])
+                movies_json = response_movies.json()
+                self.config.save('movies', movies_json['products'])
+            self.config.save('library', games_json['products'])
+            self.logger.debug(f'Synced {len(games_json["products"])} games, and {len(movies_json["products"])} movies')
             self.logger.info( 'Library refreshed')
         else:
             self.logger.error(f'Error syncing library, response for debuging: \n{response_games.text}')
@@ -126,12 +129,17 @@ class GOGAPI():
             slug = movie['slug']
             print(f'* [{title}] slug:{slug}')
         print(f'** Total Games: {games_total} **')
-        print(f'** Total Movies: {games_total} **')
+        print(f'** Total Movies: {movies_total} **')
 
     def find_game(self, query: str, key: str):
         items: list = self.config.read('library')
+        movies: list = self.config.read('movies')
         found = None
         for item in items:
+            if item[key] == query:
+                found = item
+                break
+        for item in movies:
             if item[key] == query:
                 found = item
                 break
@@ -180,3 +188,14 @@ class GOGAPI():
 
     def get_auth_status(self):
         return self.config.get('user', 'access_token') is not None
+
+    def get_dependenices_list(self):
+        self.logger.info("Getting Dependencies repository")
+        response = self.session.get(constants.DEPENDENCIES_URL)
+        if not response.ok:
+            return None
+        
+        json_data = json.loads(response.content)
+        if 'repository_manifest' in json_data:
+            self.logger.info("Getting repository manifest")
+            return get_zlib_encoded(self, str(json_data['repository_manifest']))

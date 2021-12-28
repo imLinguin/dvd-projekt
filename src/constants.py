@@ -6,10 +6,11 @@ GOG_CONTENT_SYSTEM = 'https://content-system.gog.com'
 GOG_EMBED = 'https://embed.gog.com'
 GOG_AUTH = 'https://auth.gog.com'
 GOG_API = 'https://api.gog.com'
+DEPENDENCIES_URL = 'https://content-system.gog.com/dependencies/repository?generation=2'
 DEFAULT_GAMES_PATH = os.path.join(os.getenv('HOME'), 'Games', 'dvdProjekt')
 DEFAULT_PREFIX_PATH = os.path.join(os.getenv('HOME'), '.wine')
 CONFIG_PATH = os.path.join(os.getenv('XDG_CONFIG_HOME'), '.config', 'dvdProjekt') if os.getenv(
     'XDG_CONFIG_HOME') is not None else os.path.join(os.getenv("HOME"), '.config', 'dvdProjekt')
 
 # Allowed CDN list others might cause problems (Needs more testing)
-GALAXY_CDNS = ["edgecast", "high_winds", "gog_cdn"]
+GALAXY_CDNS = ["edgecast", "high_winds", "lumen"]

@@ -52,7 +52,7 @@ def main():
     install_parser.add_argument(
         'slug', help='Slug of the game listed in list-games command')
     install_parser.add_argument(
-        '--force_platform', '--platform', dest='platform', choices=['windows', 'mac', 'linux'])
+        '--force_platform', '--platform', dest='platform', choices=['windows', 'osx', 'linux'])
     install_parser.add_argument(
         '--path', '-p', type=str, help='Specify path where to save game files')
     install_parser.add_argument(
@@ -148,11 +148,12 @@ def main():
         pass
         logger.log(logging.WARN, 'Interupted by user. Exiting. Please Wait')
         download_manager.cancel()
-        exit()
+        exit(0)
 
 
-if platform != 'linux':
-    logger.log(logging.ERROR, 'Currently only Linux supported')
-    exit()
+if platform != 'linux' and platform != 'darwin':
+    logger.log(logging.ERROR, 'Currently only Linux and Mac are supported')
+    exit(1)
 if __name__ == '__main__':
     main()
+    exit(0)
