@@ -44,6 +44,7 @@ class DownloadManager():
         for igame in range(len(installed_games)):
             if installed_games[igame]['slug'] == gameobj['slug']:
                 installed_games[igame] = gameobj
+                added = True
                 break
         if not added:
             installed_games.append(gameobj)

@@ -5,17 +5,20 @@
 ## DISCLAIMER
 Script isn't fully operational yet. I'm actively working on it.
 
+Things like updating and verifing game files can be done by issuing `install` command.
+Download workers will make sure every file's checksum is correct.
+
 ## TODO LIST
 - make sure dependencies doesn't require parameters
 - support native Linux installers
 - Handle languages for V1 depots
-- Handle MacOS games launching
 
 ## Features
 - [x] Download native Windows titles (TODO: multithreaded downloading)
 - [x] Play native Windows titles through Wine/Proton
 - [x] Download movies through client
-- [ ] Support for Mac/OSX native games
+- [x] Support for Mac/OSX native games
+- [ ] Handle generic V1 depots
 - [ ] Download native Linux installers from GOG
 - [ ] Keep games updated
 - [x] Download DLCs

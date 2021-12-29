@@ -97,16 +97,16 @@ def filterCdns(string,  options):
             return True
     return False 
 
-def calculatesha256_sum(path):
+def calculate_sum(path, function):
     with open(path, 'rb') as f:
-        sha256 = hashlib.sha256()
+        calculate = function()
         while True:
             chunk = f.read(16 * 1024)
             if not chunk:
                 break
-            sha256.update(chunk)
+            calculate.update(chunk)
 
-        return sha256.hexdigest()
+        return calculate.hexdigest()
 
 def get_readable_size(size):
     power = 2**10

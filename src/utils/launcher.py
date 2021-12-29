@@ -109,7 +109,7 @@ class Launcher():
         count = 0
         playable_tasks = []
         for task in range(len(tasks)):
-            if tasks[task]["category"] == "game" or tasks[task]["category"] == "launcher":
+            if tasks[task].get("category") == "game" or tasks[task].get("category") == "launcher":
                 playable_tasks.append(tasks[task])
         if(len(playable_tasks) == 1):
             return playable_tasks[0]

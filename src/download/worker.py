@@ -19,7 +19,7 @@ class DLWorker():
         
     def do_stuff(self, is_dependency=False):
         item_path = os.path.join(self.path, self.data.path)
-        if os.path.exists(item_path) and self.data.sha256 and (dl_utils.calculatesha256_sum(item_path) != self.data.sha256):
+        if self.verify_file(item_path):
             self.completed = True
             return
         if os.path.exists(item_path):
@@ -70,10 +70,29 @@ class DLWorker():
                     f.write(data)
             f.close()
             isExisting = os.path.exists(path)
-            if isExisting and (hashlib.md5(open(path, 'rb').read()).hexdigest() != compressed_sum):
+            if isExisting and (dl_utils.calculate_sum(path, hashlib.md5) != compressed_sum):
                 self.logger.warning(
                     f'Checksums dismatch for compressed chunk of {path}')
                 if isExisting:
                     os.remove(path)
                 self.get_file(url, path, compressed_sum,
                               decompressed_sum, index)
+
+    def verify_file(self, item_path):
+        if os.path.exists(item_path):
+            calculated = None
+            should_be = None
+            if len(self.data.chunks) > 1:
+                if data.md5:
+                    should_be = data.md5
+                    calculated = dl_utils.calculate_sum(item_path, hashlib.md5)
+                elif data.sha256:
+                    should_be = data.sha256
+                    calculated = dl_utils.calculate_sum(item_path, hashlib.sha256)
+            else:
+                calculated = dl_utils.calculate_sum(item_path, hashlib.md5)
+                should_be = self.data.chunks[0]['md5']
+
+            return calculated == should_be
+        else:
+            return False
