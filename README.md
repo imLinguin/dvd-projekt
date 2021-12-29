@@ -39,6 +39,9 @@ Script isn't ready for distributing yet, however if you really want to try it ou
 - install - Downloads desired selected by game slug
 - wine - Allows to change compatibility layers' settings.
 - launch - Play specified game
+- info - Display more information about the game
+- update - Check for game updates
+- import - Import game for launching, checking for updates etc.. (You have to own the game)
 
 ## Configuration
 Script supports configuration in a text file. Which is located under `$HOME/.config/dvdProjekt/config.yaml`
