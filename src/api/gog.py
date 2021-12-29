@@ -146,7 +146,7 @@ class GOGAPI():
         if found:
             return found
         else:
-            self.logger.error('Invalid slug')
+            self.logger.error(f'Invalid {key}')
             return None
 
     def get_item_data(self, id):

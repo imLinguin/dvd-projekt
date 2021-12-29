@@ -7,6 +7,7 @@ from api.gog import GOGAPI
 from api.wine import WineHandler
 from utils.config import ConfigManager
 from utils.launcher import Launcher
+from utils import updates, imports
 from download.manager import DownloadManager
 
 logging.basicConfig(
@@ -75,11 +76,20 @@ def main():
         '--prefix', type=str, help='Specify path for wine/proton prefix, default:$HOME/.wine')
     launch_parser.add_argument(
         '--gamemode', action='store_true', help='Enables gamemode when running exe file')
+
     info_parser = subparsers.add_parser(
         "info", help="Get info about specified game")
     info_parser.add_argument("--debug", action='store_true', help="Enables Debug console logging")
     info_parser.add_argument("--json", action="store_true", help="Returns json formated data")
     info_parser.add_argument("slug", help='Slug of the game listed in list-games command')
+
+    updates_parser = subparsers.add_parser("update", help="Checks for games updates")
+    updates_parser.add_argument("--debug", action='store_true', help="Enables Debug console logging")
+    
+    import_parser = subparsers.add_parser("import", help="Import already installed GOG game")
+    import_parser.add_argument("--debug", action='store_true', help="Enables Debug console logging")
+    import_parser.add_argument("import_path", help="Path where game is installed")
+
 
     args = parser.parse_args()
     yaml_config = config_manager.read_config_yaml()
@@ -143,7 +153,11 @@ def main():
                 print(json.dumps(data))
             else:
                 print(f"*******\nTITLE: {data['title']}\nFORUM: {data['forumLink']}\nFEATURES: {json.dumps(data['features'])}\nCHANGELOG: {data['changelog']}\n*******")
-            
+        elif args.command == 'update':
+            updates.check_for_updates(args,api_handler, config_manager)
+        elif args.command == 'import':
+            imports.import_game(args, api_handler, config_manager)
+
     except KeyboardInterrupt:
         pass
         logger.log(logging.WARN, 'Interupted by user. Exiting. Please Wait')
