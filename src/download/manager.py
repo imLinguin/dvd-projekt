@@ -28,9 +28,9 @@ class DownloadManager():
 
     def cancel(self):
         if self.thpool:
+            self.logger.info("Shutting down thread pool")
             self.thpool.shutdown(wait=True, cancel_futures=True)
         self.cancelled = True
-        self.thpool.shutdown(wait=False)
         exit(0)
 
     # Saves data about installed game in config
@@ -159,21 +159,31 @@ class DownloadManager():
             f"Downloading {len(download_files)} game files, and {len(dependency_files)} dependency files proceeding")
         
         self.threads = []
+
+        size_data = self.calculate_size(download_files, dependency_files)
+        download_size = size_data[0]
+        disk_size = size_data[1]
+
+        readable_download_size = dl_utils.get_readable_size(download_size)
+        readable_disk_size = dl_utils.get_readable_size(disk_size)
+        self.logger.info(f"Download size: {round(readable_download_size[0], 2)}{readable_download_size[1]}")
+        self.logger.info(f"Size on disk: {round(readable_disk_size[0], 2)}{readable_disk_size[1]}")
+
         allowed_threads = max(1, cpu_count())
         self.logger.debug("Spawning progress bar process")
         self.logger.warn("Progress bar is broken at the moment, will display size in the future instead of number of files.")
-        self.progress = ProgressBar(0, len(download_files), 50)
+        self.progress = ProgressBar(download_size, f"{round(readable_download_size[0], 2)}{readable_download_size[1]}", 50)
         self.progress.start()
 
         self.thpool = ThreadPoolExecutor(max_workers=allowed_threads)
         
         # Main game files
         for file in download_files:
-            thread = DLWorker(file, self.dl_path, self.api_handler, self.game['id'])
+            thread = DLWorker(file, self.dl_path, self.api_handler, self.game['id'], self.progress.update_downloaded_size)
             self.threads.append(self.thpool.submit(thread.do_stuff))
         # Dependencies
         for file in dependency_files:
-            thread = DLWorker(file, self.dl_path, self.api_handler, self.game['id'])
+            thread = DLWorker(file, self.dl_path, self.api_handler, self.game['id'], self.progress.update_downloaded_size)
             self.threads.append(self.thpool.submit(thread.do_stuff, (True)))
 
         # Wait until everything finishes
@@ -287,3 +297,20 @@ class DownloadManager():
 
     def unpack_v1(self, download_files):
         self.logger.info("Unpacking main.bin (fs intense thing)")
+
+    def calculate_size(self, files, dependencies):
+        self.logger.info("Calculating download size")
+        download_size = 0
+        disk_size = 0
+        for file in files:
+            if type(file) == objects.DepotFile:
+                for chunk in file.chunks:
+                    download_size+=int(chunk['compressedSize'])
+                    disk_size+=int(chunk['size'])
+
+        for dependency in dependencies:
+            for chunk in dependency.chunks:
+                download_size+=int(chunk['compressedSize'])
+                disk_size+=int(chunk['size'])
+
+        return (download_size, disk_size)

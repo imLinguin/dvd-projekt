@@ -8,28 +8,31 @@ import os
 
 
 class DLWorker():
-    def __init__(self, data, path, api_handler, gameId):
+    def __init__(self, data, path, api_handler, gameId, submit_downloaded_size):
         self.data = data
         self.path = path
         self.api_handler = api_handler
+        self.submit_downloaded_size = submit_downloaded_size
         self.gameId = gameId
         self.completed = False
         self.logger = logging.getLogger("DOWNLOAD_WORKER")
-        self.cancelled = False
         
     def do_stuff(self, is_dependency=False):
         item_path = os.path.join(self.path, self.data.path)
         if self.verify_file(item_path):
+            size = 0
+            for chunk in self.data.chunks:
+                size += chunk['compressedSize']
+            self.submit_downloaded_size(self.downloaded_size)
             self.completed = True
             return
         if os.path.exists(item_path):
             os.remove(item_path)
         for index in range(len(self.data.chunks)):
             chunk = self.data.chunks[index]
-            if self.cancelled:
-                break
             compressed_md5 = chunk['compressedMd5']
             md5 = chunk['md5']
+            self.downloaded_size = chunk['compressedSize']
             if is_dependency:
                 url = dl_utils.get_dependency_link(self.api_handler, dl_utils.galaxy_path(compressed_md5))
             else:
@@ -39,10 +42,12 @@ class DLWorker():
             dl_utils.prepare_location(
                 dl_utils.parent_dir(download_path), self.logger)
             self.get_file(url, download_path, compressed_md5, md5, index)
+            self.submit_downloaded_size(self.downloaded_size)
         for index in range(len(self.data.chunks)):
             path = os.path.join(self.path, self.data.path)
             self.decompress_file(path+f'.tmp{index}', path)
         self.completed = True
+        self.submit_downloaded_size(self.downloaded_size)
 
     def decompress_file(self, compressed, decompressed):
         if os.path.exists(compressed):
