@@ -97,7 +97,6 @@ class DLWorker():
             else:
                 calculated = dl_utils.calculate_sum(item_path, hashlib.md5)
                 should_be = self.data.chunks[0]['md5']
-
             return calculated == should_be
         else:
             return False

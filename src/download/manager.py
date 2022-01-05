@@ -171,7 +171,6 @@ class DownloadManager():
 
         allowed_threads = max(1, cpu_count())
         self.logger.debug("Spawning progress bar process")
-        self.logger.warn("Progress bar is broken at the moment, will display size in the future instead of number of files.")
         self.progress = ProgressBar(download_size, f"{round(readable_download_size[0], 2)}{readable_download_size[1]}", 50)
         self.progress.start()
 

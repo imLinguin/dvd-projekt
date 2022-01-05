@@ -22,11 +22,11 @@ class ProgressBar(threading.Thread):
             done = round(self.length*(self.downloaded/self.total))
             readable_downloaded = dl_utils.get_readable_size(self.downloaded)
             sys.stdout.write(
-                f'\r[{"█" * int(done)}{"." * (self.length-int(done))}] Downloaded: {round(readable_downloaded[0],2)}{readable_downloaded[1]} of {self.readable_total}\t')
+                f'\r[{"█" * int(done)}{"." * (self.length-int(done))}] Downloaded: {round(readable_downloaded[0],2)}{readable_downloaded[1]} of {self.readable_total}   ')
             sys.stdout.flush()
 
             time.sleep(1)
-        sys.stdout.write('')
+        sys.stdout.write('\r')
         sys.stdout.flush()
 
     def update_downloaded_size(self, addition):

@@ -1,4 +1,4 @@
-<p style="display:flex; justify-content:center;">
+<p align="center">
     <img src="./content/project_tux.svg" width=600px>
 </p>
 
