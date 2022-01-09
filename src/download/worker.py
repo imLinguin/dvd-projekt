@@ -16,6 +16,7 @@ class DLWorker():
         self.gameId = gameId
         self.completed = False
         self.logger = logging.getLogger("DOWNLOAD_WORKER")
+        self.downloaded_size = 0
         
     def do_stuff(self, is_dependency=False):
         item_path = os.path.join(self.path, self.data.path)
@@ -23,7 +24,7 @@ class DLWorker():
             size = 0
             for chunk in self.data.chunks:
                 size += chunk['compressedSize']
-            self.submit_downloaded_size(self.downloaded_size)
+            self.submit_downloaded_size(size)
             self.completed = True
             return
         if os.path.exists(item_path):
@@ -47,7 +48,7 @@ class DLWorker():
             path = os.path.join(self.path, self.data.path)
             self.decompress_file(path+f'.tmp{index}', path)
         self.completed = True
-        self.submit_downloaded_size(self.downloaded_size)
+
 
     def decompress_file(self, compressed, decompressed):
         if os.path.exists(compressed):

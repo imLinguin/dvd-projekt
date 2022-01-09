@@ -24,9 +24,11 @@ class Depot():
         self.manifest = depot_data['manifest']
 
     def check_language(self):
-        status = True
+        status = False
         for lang in self.languages:
-            status = lang == '*' or lang == 'en-US' or lang == 'en' or self.target_lang == lang or self.target_lang.split('-')[0] == lang
+            status = lang == '*' or self.target_lang == lang or self.target_lang.split('-')[0] == lang
+            if status: 
+                break
         return status
 
 class DepotV1():
