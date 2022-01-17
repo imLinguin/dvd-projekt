@@ -92,8 +92,7 @@ def main():
 
     except KeyboardInterrupt:
         pass
-        logger.log(logging.WARN, 'Interupted by user. Exiting. Please Wait')
-        download_manager.cancel()
+        logger.log(logging.WARN, 'Interupted by user. Exiting.')
         exit(0)
 
 

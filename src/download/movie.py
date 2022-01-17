@@ -14,7 +14,7 @@ def download_movie(info, api_handler):
     input = ask_for_input(len(downloads))
     if not os.path.isdir(constants.DEFAULT_GAMES_PATH):
         os.makedirs(constants.DEFAULT_GAMES_PATH)
-    file_dl.get_movie(f"https://gog.com{downloads[input]['manualUrl']}", os.path.join(constants.DEFAULT_GAMES_PATH), api_handler, logger, True)
+    file_dl.get_file(f"https://gog.com{downloads[input]['manualUrl']}", os.path.join(constants.DEFAULT_GAMES_PATH), api_handler, logger, True)
 
 def ask_for_input(length):
     choice = input("Choose preffered download: ")

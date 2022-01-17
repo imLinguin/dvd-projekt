@@ -7,7 +7,7 @@ import requests
 import threading
 from time import sleep
 from multiprocessing import cpu_count
-from download import dl_utils, objects, movie, file_dl
+from download import dl_utils, objects, movie, file_dl, linux
 from download.worker import DLWorker
 from download.progressbar import ProgressBar
 from concurrent.futures import ThreadPoolExecutor
@@ -91,15 +91,20 @@ class DownloadManager():
             return False
         # Handling platform Mac and Windows supported for now
         if args.platform:
-            if args.platform != "linux":
-                self.platform = args.platform
-            else:
-                print("Linux downloads are not supported at the moment")
-                return False
+            self.platform = args.platform
+
+        if not args.path:
+            self.dl_path = constants.DEFAULT_GAMES_PATH
+        else:
+            self.logger.info(f'Custom path provided {args.path}')
+            self.dl_path = args.path
 
         is_compatible = self.check_compatibility()
         self.logger.info(f'Game is {"compatible" if is_compatible else "incompatible"}')
         if not is_compatible:
+            return False
+        if self.platform == "linux":
+            linux.download(self.dl_target, self.api_handler, self.dl_path, self.config)
             return False
         self.logger.debug('Getting Build data')
         # Builds data
@@ -121,13 +126,8 @@ class DownloadManager():
         self.meta = dl_utils.get_zlib_encoded(self.api_handler, meta_url)
         self.game = game
         install_directory = self.meta['installDirectory'] if self.depot_version == 2 else self.meta['product']['installDirectory']
-        if not args.path:
-            self.dl_path = constants.DEFAULT_GAMES_PATH
-            self.dl_path = os.path.join(
+        self.dl_path = os.path.join(
                 self.dl_path, install_directory)
-        else:
-            self.logger.info(f'Custom path provided {args.path}')
-            self.dl_path = args.path
         # TODO: Handle Dependencies
         self.dependencies = self.handle_dependencies()
 
@@ -302,9 +302,6 @@ class DownloadManager():
             'windows': 'Windows',
             'linux': 'Linux'
         }
-        if self.platform == "linux":
-            self.logger.error("Linux installers are not supported yet")
-            return False
         return self.dl_target['worksOn'][tester[self.platform]]
 
     def unpack_v1(self, download_files):

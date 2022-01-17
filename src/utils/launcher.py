@@ -52,7 +52,7 @@ class Launcher():
         game_data = self.load_game_info(found)
         task = self.get_task(game_data['playTasks'])
         task_path = task['path'].replace("\\\\","/")
-        exe_path = os.path.join(found['path'], task['path'])
+        exe_path = os.path.join(found['path'], 'game' if found['platform'] == 'linux' else '', task['path'])
         binary_path: str = self.wine.get_binary_path()
         prefix_path = prefix or DEFAULT_PREFIX_PATH
         prefix_path.replace(" ", "\ ")
@@ -70,7 +70,8 @@ class Launcher():
                     command = f'{"gamemoderun" if gamemode == True else ""} {envvars} WINEPREFIX="{prefix_path}" "{binary_path}" "{exe_path}" {task_arguments}'
             elif found['platform'] == 'osx':
                 self.unsupported_platform()
-
+            elif found['platform'] == 'linux':
+                command = f'{"gamemoderun" if gamemode == True else ""} {envvars} {exe_path} {task_arguments}'
         elif platform == 'darwin':
             if found['platform'] == 'darwin':
                 command = f'{envvars} {exe_path} {task_arguments}'
@@ -93,7 +94,7 @@ class Launcher():
 
     def load_game_info(self, game):
         filename = f'goggame-{game["id"]}.info'
-        abs_path = os.path.join(game['path'], filename) if platform != "darwin" else os.path.join(game['path', 'Contents', 'Resources', filename])
+        abs_path = (os.path.join(game['path'], filename) if game['platform'] == "win32" else os.path.join(game['path'], 'game', filename)) if game['platform'] != "darwin" else os.path.join(game['path', 'Contents', 'Resources', filename])
         self.logger.info(f'Loading game info from {abs_path}')
         if not os.path.isfile(abs_path):
             self.logger.error('File does not exist. Exiting...')
