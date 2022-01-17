@@ -199,3 +199,7 @@ class GOGAPI():
         if 'repository_manifest' in json_data:
             self.logger.info("Getting repository manifest")
             return get_zlib_encoded(self, str(json_data['repository_manifest']))
+
+    def does_user_own(self, id):
+        data = self.get_item_data(id)
+        return data != []

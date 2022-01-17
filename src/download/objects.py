@@ -26,7 +26,7 @@ class Depot():
     def check_language(self):
         status = False
         for lang in self.languages:
-            status = lang == '*' or self.target_lang == lang or self.target_lang.split('-')[0] == lang
+            status = lang == '*' or self.target_lang == lang or self.target_lang.split('-')[0] == lang or self.target_lang == lang.split('-')[0]
             if status: 
                 break
         return status

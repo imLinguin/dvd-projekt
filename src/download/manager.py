@@ -69,6 +69,13 @@ class DownloadManager():
         else:
             self.logger.info(f'Custom path provided {args.path}')
             self.dl_path = args.path
+        
+        if not args.lang:
+            config_lang = self.config.read_config_yaml().get("global").get("lang")
+            if config_lang:
+                self.lang = config_lang
+        else:
+            self.lang = args.lang
 
         # Getting more and newer data
         self.dl_target = self.api_handler.get_item_data(game['id'])
@@ -137,9 +144,14 @@ class DownloadManager():
         download_files = []
         dependency_files = []
 
+        owned_dlcs = []
+        for dlc in self.meta['products']:
+            if dlc['productId'] != self.meta['baseProductId']:
+                if self.api_handler.does_user_own(dlc['productId']):
+                    owned_dlcs.append(dlc['productId'])
+
         for depot in self.meta['depots']:
-            if str(depot['productId']) == str(self.dl_target['id']):
-                # TODO: Respect user language
+            if str(depot['productId']) == str(self.meta['baseProductId']) or depot['productId'] in owned_dlcs:
                 newObject = objects.Depot(self.lang, depot)
                 if newObject.check_language():
                     collected_depots.append(newObject)
@@ -250,7 +262,8 @@ class DownloadManager():
 
         dl_utils.prepare_location(self.dl_path, self.logger)
         self.logger.info("Downloading main.bin file")
-        if file_dl.get_file(f'{constants.GOG_CDN}/content-system/v1/depots/{self.game["id"]}/main.bin', self.dl_path, self.api_handler, self.logger, False):
+        link = dl_utils.get_secure_link(self.api_handler, f"/", self.game["id"], generation=1)
+        if file_dl.get_file(link, self.dl_path, self.api_handler, self.logger, False):
             self.unpack_v1(download_files)
         else:
             print("")

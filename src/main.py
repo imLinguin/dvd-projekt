@@ -24,7 +24,6 @@ def main():
         config_manager=config_manager, api_handler=api_handler)
 
     args = cli.init_parser()
-    
     yaml_config = config_manager.read_config_yaml()
     try:
         if (yaml_config and yaml_config.get('global').get('debug') == True) or args.debug == True:
