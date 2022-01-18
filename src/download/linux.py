@@ -18,6 +18,7 @@ def download(data, api_handler, path, config):
             "url":installerUrl
         })
         languagesList += f'{helper+1}. {language}\n'
+        helper+=1
     choice = 0
     if len(downloads) > 1:
         choice = ask_for_input(languagesList, len(downloads))

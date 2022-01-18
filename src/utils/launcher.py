@@ -71,16 +71,16 @@ class Launcher():
             elif found['platform'] == 'osx':
                 self.unsupported_platform()
             elif found['platform'] == 'linux':
-                command = f'{"gamemoderun" if gamemode == True else ""} {envvars} {exe_path} {task_arguments}'
+                command = f'{"gamemoderun" if gamemode == True else ""} {envvars} "{exe_path}" {task_arguments}'
         elif platform == 'darwin':
             if found['platform'] == 'darwin':
-                command = f'{envvars} {exe_path} {task_arguments}'
+                command = f'{envvars} "{exe_path}" {task_arguments}'
             else:
                 self.unsupported_platform()
 
         elif platform == 'win32':
             if found['platform'] == 'win32':
-                command = f'{envvars} {exe_path} {task_arguments}'
+                command = f'{envvars} "{exe_path}" {task_arguments}'
             else:
                 self.unsupported_platform()
 
