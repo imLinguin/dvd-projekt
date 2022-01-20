@@ -94,7 +94,7 @@ class Launcher():
 
     def load_game_info(self, game):
         filename = f'goggame-{game["id"]}.info'
-        abs_path = (os.path.join(game['path'], filename) if game['platform'] == "win32" else os.path.join(game['path'], 'game', filename)) if game['platform'] != "darwin" else os.path.join(game['path', 'Contents', 'Resources', filename])
+        abs_path = (os.path.join(game['path'], filename) if game['platform'] == "windows" else os.path.join(game['path'], 'game', filename)) if game['platform'] != "darwin" else os.path.join(game['path', 'Contents', 'Resources', filename])
         self.logger.info(f'Loading game info from {abs_path}')
         if not os.path.isfile(abs_path):
             self.logger.error('File does not exist. Exiting...')
@@ -110,7 +110,7 @@ class Launcher():
         count = 0
         playable_tasks = []
         for task in range(len(tasks)):
-            if tasks[task].get("category") == "game" or tasks[task].get("category") == "launcher":
+            if (tasks[task].get("category") == "game" or tasks[task].get("category") == "launcher") and not tasks[task].get('isHidden'):
                 playable_tasks.append(tasks[task])
         if(len(playable_tasks) == 1):
             return playable_tasks[0]
