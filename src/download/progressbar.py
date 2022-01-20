@@ -11,6 +11,7 @@ class ProgressBar(threading.Thread):
         self.readable_total = readable_download_size
         self.length = length
         self.completed = False
+        self.downloaded_since_update = 0
         super().__init__(target=self.print_progressbar)
 
     def print_progressbar(self):
@@ -21,13 +22,15 @@ class ProgressBar(threading.Thread):
                 break
             done = round(self.length*(self.downloaded/self.total))
             readable_downloaded = dl_utils.get_readable_size(self.downloaded)
+            readable_speed = dl_utils.get_readable_size(self.downloaded_since_update)
             sys.stdout.write(
-                f'\r[{"█" * int(done)}{"." * (self.length-int(done))}] Downloaded: {round(readable_downloaded[0],2)}{readable_downloaded[1]} of {self.readable_total}   ')
+                f'\r[{"█" * int(done)}{"." * (self.length-int(done))}] Downloaded: {round(readable_downloaded[0],2)}{readable_downloaded[1]} of {self.readable_total} Speed: {readable_speed[0]:0.2f} {readable_speed[1]}/s ')
             sys.stdout.flush()
-
+            self.downloaded_since_update = 0
             time.sleep(1)
         sys.stdout.write('\r')
         sys.stdout.flush()
 
     def update_downloaded_size(self, addition):
         self.downloaded+=addition
+        self.downloaded_since_update+=addition
