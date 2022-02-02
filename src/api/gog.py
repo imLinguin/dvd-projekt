@@ -95,7 +95,6 @@ class GOGAPI():
             self.logger.info(f"Total Pages: {totalPages}")
             if totalPages:
                 for page in range(2, totalPages+1):
-                    print(page)
                     url = _gog_library_url+args_games+f'&page={page}'
                     res = self.session.get(url)
                     json_data = res.json()
@@ -104,7 +103,9 @@ class GOGAPI():
                 movies_json = response_movies.json()
                 self.config.save('movies', movies_json['products'])
             for game in games_array:
-                game['depot_version'] = get_json(self, f'{constants.GOG_CONTENT_SYSTEM}/products/{game["id"]}/os/windows/builds?generation=2')['items'][0]['generation']
+                items = get_json(self, f'{constants.GOG_CONTENT_SYSTEM}/products/{game["id"]}/os/windows/builds?generation=2').get('items')
+                if items and len(items) > 0:
+                    game['depot_version'] = items[0].get('generation')
             self.config.save('library', games_array)
             self.logger.debug(f'Synced {len(games_json["products"])} games, and {len(movies_json["products"])} movies')
             self.logger.info( 'Library refreshed')
