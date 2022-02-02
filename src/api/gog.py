@@ -82,19 +82,30 @@ class GOGAPI():
         if not self.auth_status:
             self.logger.error('You are not logged in')
             return
-        args_games = 'mediaType=1&hiddenFlag=0&sortBy=title&totalPages=1'
-        args_movies = 'mediaType=2&hiddenFlag=0&sortBy=title&totalPages=1'
+        args_games = 'mediaType=1&hiddenFlag=0&sortBy=title'
+        args_movies = 'mediaType=2&hiddenFlag=0&sortBy=title'
 
         response_games = self.session.get(_gog_library_url+args_games)
         response_movies = self.session.get(_gog_library_url+args_movies)
         if response_games.ok:
             games_json = response_games.json()
+            games_array = []
+            games_array.extend(games_json['products'])
+            totalPages = games_json['totalPages']
+            self.logger.info(f"Total Pages: {totalPages}")
+            if totalPages:
+                for page in range(2, totalPages+1):
+                    print(page)
+                    url = _gog_library_url+args_games+f'&page={page}'
+                    res = self.session.get(url)
+                    json_data = res.json()
+                    games_array.extend(json_data['products'])
             if response_movies.ok:
                 movies_json = response_movies.json()
                 self.config.save('movies', movies_json['products'])
-            for game in games_json['products']:
+            for game in games_array:
                 game['depot_version'] = get_json(self, f'{constants.GOG_CONTENT_SYSTEM}/products/{game["id"]}/os/windows/builds?generation=2')['items'][0]['generation']
-            self.config.save('library', games_json['products'])
+            self.config.save('library', games_array)
             self.logger.debug(f'Synced {len(games_json["products"])} games, and {len(movies_json["products"])} movies')
             self.logger.info( 'Library refreshed')
         else:
