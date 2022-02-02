@@ -18,9 +18,9 @@ Download workers will make sure every file's checksum is correct.
 - [x] Play native Windows titles through Wine/Proton
 - [x] Download movies through client
 - [x] Support for Mac/OSX native games
-- [ ] Handle generic V1 depots
-- [ ] Download native Linux installers from GOG
-- [ ] Keep games updated
+- [x] Handle generic V1 depots
+- [x] Download native Linux installers from GOG
+- [x] Keep games updated
 - [x] Download DLCs
 - [ ] Manage DLCs / is it really needed?
 - [ ] Manage downloaded games
