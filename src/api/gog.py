@@ -107,7 +107,7 @@ class GOGAPI():
                 if items and len(items) > 0:
                     game['depot_version'] = items[0].get('generation')
             self.config.save('library', games_array)
-            self.logger.debug(f'Synced {len(games_json["products"])} games, and {len(movies_json["products"])} movies')
+            self.logger.debug(f'Synced {len(games_array)} games, and {len(movies_json["products"])} movies')
             self.logger.info( 'Library refreshed')
         else:
             self.logger.error(f'Error syncing library, response for debuging: \n{response_games.text}')
@@ -136,7 +136,7 @@ class GOGAPI():
             if windows_support:
                 platforms.append('Windows')
             print(
-                f'* [{title}] slug:{slug} support:{",".join(platforms)} DEPOT_VERSION:{game["depot_version"]}')
+                f'* [{title}] slug:{slug} support:{",".join(platforms)} DEPOT_VERSION:{game.get("depot_version")}')
         print("\n* MOVIES *")
         for movie in movies:
             title = movie['title']
