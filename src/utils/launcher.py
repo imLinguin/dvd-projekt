@@ -87,9 +87,9 @@ class Launcher():
             
         command = command.strip()
         print("Issuing command\n", command)
-
-        process = subprocess.run(command, shell=True, cwd=found['path'])
-
+        working_directory = os.path.join(found['path'],task['workingDir'])
+        print(working_directory)
+        process = subprocess.run(command, shell=True, cwd=working_directory)
         exit(process.returncode)
 
     def load_game_info(self, game):
@@ -110,6 +110,9 @@ class Launcher():
         count = 0
         playable_tasks = []
         for task in range(len(tasks)):
+            if not 'category' in tasks[task]:
+                if tasks[task].get('isPrimary'):
+                    return tasks[task]
             if (tasks[task].get("category") == "game" or tasks[task].get("category") == "launcher") and not tasks[task].get('isHidden'):
                 playable_tasks.append(tasks[task])
         if(len(playable_tasks) == 1):

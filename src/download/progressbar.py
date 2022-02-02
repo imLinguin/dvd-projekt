@@ -12,22 +12,24 @@ class ProgressBar(threading.Thread):
         self.length = length
         self.completed = False
         self.downloaded_since_update = 0
+        self.last_update = time.time()
         super().__init__(target=self.print_progressbar)
 
     def print_progressbar(self):
         done = 0
 
         while True:
-            if(self.completed):
-                break
             done = round(self.length*(self.downloaded/self.total))
             readable_downloaded = dl_utils.get_readable_size(self.downloaded)
-            readable_speed = dl_utils.get_readable_size(self.downloaded_since_update)
+            readable_speed = dl_utils.get_readable_size(self.downloaded_since_update / (time.time() - self.last_update))
             sys.stdout.write(
                 f'\r[{"█" * int(done)}{"." * (self.length-int(done))}] Downloaded: {round(readable_downloaded[0],2)}{readable_downloaded[1]} of {self.readable_total} Speed: {readable_speed[0]:0.2f} {readable_speed[1]}/s ')
             sys.stdout.flush()
             self.downloaded_since_update = 0
-            time.sleep(1)
+            self.last_update = time.time()
+            time.sleep(0.5)
+            if(self.completed):
+                break
         sys.stdout.write('\r')
         sys.stdout.flush()
 

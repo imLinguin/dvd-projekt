@@ -7,6 +7,7 @@ GOG_EMBED = 'https://embed.gog.com'
 GOG_AUTH = 'https://auth.gog.com'
 GOG_API = 'https://api.gog.com'
 DEPENDENCIES_URL = 'https://content-system.gog.com/dependencies/repository?generation=2'
+DEPENDENCIES_V1_URL = 'https://content-system.gog.com/redists/repository'
 
 DEFAULT_GAMES_PATH = os.path.join(os.getenv('HOME'), 'Games', 'dvdProjekt')
 DEFAULT_PREFIX_PATH = os.path.join(os.getenv('HOME'), '.wine')
