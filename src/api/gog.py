@@ -4,7 +4,7 @@ import logging
 import time
 import json
 import constants
-from download.dl_utils import get_zlib_encoded
+from download.dl_utils import get_zlib_encoded, get_json
 from multiprocessing import cpu_count
 
 _gog_auth_url = f'{constants.GOG_AUTH}/auth?client_id=46899977096215655&redirect_uri={constants.GOG_EMBED}/on_login_success?origin=client&response_type=code&layout=client2'
@@ -92,6 +92,8 @@ class GOGAPI():
             if response_movies.ok:
                 movies_json = response_movies.json()
                 self.config.save('movies', movies_json['products'])
+            for game in games_json['products']:
+                game['depot_version'] = get_json(self, f'{constants.GOG_CONTENT_SYSTEM}/products/{game["id"]}/os/windows/builds?generation=2')['items'][0]['generation']
             self.config.save('library', games_json['products'])
             self.logger.debug(f'Synced {len(games_json["products"])} games, and {len(movies_json["products"])} movies')
             self.logger.info( 'Library refreshed')
@@ -122,7 +124,7 @@ class GOGAPI():
             if windows_support:
                 platforms.append('Windows')
             print(
-                f'* [{title}] slug:{slug} support:{",".join(platforms)}')
+                f'* [{title}] slug:{slug} support:{",".join(platforms)} DEPOT_VERSION:{game["depot_version"]}')
         print("\n* MOVIES *")
         for movie in movies:
             title = movie['title']
