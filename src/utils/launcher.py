@@ -87,8 +87,7 @@ class Launcher():
             
         command = command.strip()
         print("Issuing command\n", command)
-        working_directory = os.path.join(found['path'],task['workingDir'])
-        print(working_directory)
+        working_directory = os.path.join(found['path'],task.get('workingDir') if task.get('workingDir') is not None else '')
         process = subprocess.run(command, shell=True, cwd=working_directory)
         exit(process.returncode)
 

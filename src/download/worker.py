@@ -5,16 +5,18 @@ import zlib
 import time
 import logging
 import os
+from copy import copy
 
 
 class DLWorker():
-    def __init__(self, data, path, api_handler, gameId, submit_downloaded_size):
+    def __init__(self, data, path, api_handler, gameId, submit_downloaded_size, endpoint):
         self.data = data
         self.path = path
         self.api_handler = api_handler
         self.submit_downloaded_size = submit_downloaded_size
         self.gameId = gameId
         self.completed = False
+        self.endpoint = endpoint
         self.logger = logging.getLogger("DOWNLOAD_WORKER")
         self.downloaded_size = 0
         
@@ -29,21 +31,25 @@ class DLWorker():
             return
         if os.path.exists(item_path):
             os.remove(item_path)
+           
         for index in range(len(self.data.chunks)):
             chunk = self.data.chunks[index]
             compressed_md5 = chunk['compressedMd5']
             md5 = chunk['md5']
             self.downloaded_size = chunk['compressedSize']
-            if is_dependency:
-                url = dl_utils.get_dependency_link(self.api_handler, dl_utils.galaxy_path(compressed_md5))
-            else:
-                url = dl_utils.get_secure_link(self.api_handler, dl_utils.galaxy_path(compressed_md5), self.gameId)
             download_path = os.path.join(
                 self.path, self.data.path+f'.tmp{index}')
             dl_utils.prepare_location(
                 dl_utils.parent_dir(download_path), self.logger)
+            if is_dependency:
+                url = dl_utils.get_dependency_link(self.api_handler, dl_utils.galaxy_path(compressed_md5))
+            else:
+                parameters = copy(self.endpoint['parameters'])
+                parameters['path'] += "/" + dl_utils.galaxy_path(compressed_md5)
+                url = dl_utils.merge_url_with_params(self.endpoint['url_format'], parameters)
             self.get_file(url, download_path, compressed_md5, md5, index)
-            self.submit_downloaded_size(self.downloaded_size)
+            if not is_dependency:
+                self.submit_downloaded_size(self.downloaded_size)
         path = os.path.join(self.path, self.data.path)
         with open(path, 'ab') as output_file:
             for index in range(len(self.data.chunks)):
@@ -61,7 +67,9 @@ class DLWorker():
 
     def get_file(self, url, path, compressed_sum='', decompressed_sum='', index=0):
         isExisting = os.path.exists(path)
-        if isExisting:
+        if isExisting and (dl_utils.calculate_sum(path, hashlib.md5) == compressed_sum):
+            return
+        elif isExisting:
             os.remove(path)
         with open(path, 'ab') as f:
             response = self.api_handler.session.get(
@@ -82,21 +90,28 @@ class DLWorker():
                     os.remove(path)
                 self.get_file(url, path, compressed_sum,
                               decompressed_sum, index)
-
+            elif not isExisting:
+                self.get_file(url, path, compressed_sum,
+                              decompressed_sum, index)
     def verify_file(self, item_path):
         if os.path.exists(item_path):
             calculated = None
             should_be = None
             if len(self.data.chunks) > 1:
-                if data.md5:
-                    should_be = data.md5
+                if self.data.md5:
+                    should_be = self.data.md5
                     calculated = dl_utils.calculate_sum(item_path, hashlib.md5)
-                elif data.sha256:
-                    should_be = data.sha256
+                elif self.data.sha256:
+                    should_be = self.data.sha256
                     calculated = dl_utils.calculate_sum(item_path, hashlib.sha256)
             else:
-                calculated = dl_utils.calculate_sum(item_path, hashlib.md5)
-                should_be = self.data.chunks[0]['md5']
+                # In case if there are sha256 sums in chunks
+                if 'sha256' in self.data.chunks[0]:
+                    calculated = dl_utils.calculate_sum(item_path, hashlib.sha256)
+                    should_be = self.data.chunks[0]['sha256']
+                elif 'md5' in self.data.chunks[0]:
+                    calculated = dl_utils.calculate_sum(item_path, hashlib.md5)
+                    should_be = self.data.chunks[0]['md5']
             return calculated == should_be
         else:
             return False

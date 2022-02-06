@@ -185,13 +185,14 @@ class DownloadManager():
 
         self.thpool = ThreadPoolExecutor(max_workers=allowed_threads)
         
+        endpoint = dl_utils.get_secure_link(self.api_handler, '/', self.game['id'])
         # Main game files
         for file in download_files:
-            thread = DLWorker(file, self.dl_path, self.api_handler, self.game['id'], self.progress.update_downloaded_size)
+            thread = DLWorker(file, self.dl_path, self.api_handler, self.game['id'], self.progress.update_downloaded_size, endpoint)
             self.threads.append(self.thpool.submit(thread.do_stuff))
         # Dependencies
         for file in dependency_files:
-            thread = DLWorker(file, self.dl_path, self.api_handler, self.game['id'], self.progress.update_downloaded_size)
+            thread = DLWorker(file, self.dl_path, self.api_handler, self.game['id'], self.progress.update_downloaded_size, None)
             self.threads.append(self.thpool.submit(thread.do_stuff, (True)))
 
         # Wait until everything finishes
@@ -370,13 +371,6 @@ class DownloadManager():
         for file in files:
             if type(file) == objects.DepotFile and self.depot_version == 2:
                 for chunk in file.chunks:
-                    download_size+=int(chunk['compressedSize'])
-                    disk_size+=int(chunk['size'])
-            elif self.depot_version == 1:
-                disk_size+=int(file['size'])
-        for dependency in dependencies:
-            if self.depot_version == 2:
-                for chunk in dependency.chunks:
                     download_size+=int(chunk['compressedSize'])
                     disk_size+=int(chunk['size'])
             elif self.depot_version == 1:

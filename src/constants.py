@@ -14,4 +14,4 @@ DEFAULT_PREFIX_PATH = os.path.join(os.getenv('HOME'), '.wine')
 CACHE_PATH = os.path.join(os.getenv('XDG_CACHE_HOME', os.path.expanduser('~/.cache')), 'dvdProjekt')
 CONFIG_PATH = os.path.join(os.getenv('XDG_CONFIG_HOME', os.path.expanduser('~/.config')), 'dvdProjekt')
 # Allowed CDN list others might cause problems (Needs more testing)
-GALAXY_CDNS = ["edgecast", "high_winds", "lumen"]
+# GALAXY_CDNS = []
