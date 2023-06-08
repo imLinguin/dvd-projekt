@@ -3,7 +3,7 @@
 </p>
 
 ## DISCLAIMER
-Script isn't fully operational yet. I'm actively working on it.
+Script isn't fully operational, most likely it never will be. The tool is deprecated in favor of Heroic Games Launcher and heroic-gogdl.
 
 Things like updating and verifing game files can be done by issuing `install` command.
 Download workers will make sure every file's checksum is correct.
